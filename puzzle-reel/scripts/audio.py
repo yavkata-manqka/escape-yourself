@@ -108,6 +108,12 @@ def blip():  # the hidden-digit cue
     return (sine(2400, t) * 0.6 + sine(3600, t) * 0.3) * env(t, 0.025)
 
 
+def flash_hum():  # a short buzzing tone for as long as a digit is on screen (0.5 s)
+    t = tt(0.5)
+    s = sine(note(74), t) * 0.5 + saw(note(62), t) * 0.2
+    return lp(s, 2500) * np.clip(t / 0.01, 0, 1) * np.clip((0.5 - t) / 0.03, 0, 1)
+
+
 def wrong():
     t = tt(0.32)
     s = (saw(note(50), t) + saw(note(49), t)) * 0.3
@@ -152,13 +158,14 @@ for blk in range(40):
 place(riser * (t / d) ** 2 * 0.35, 211 / FPS, pan=0.1, rev=0.2)
 
 # ------------------------------------------------------------------ picture-synced hits
-LINE_SLAMS = [1, 14, 28, 72, 86, 100, 141, 155, 169, 183, 324, 338, 352, 362, 379, 386, 393, 400, 421, 428]
+LINE_SLAMS = [15, 29, 43, 72, 86, 100, 141, 151, 161, 171, 324, 338, 352, 362, 379, 386, 393, 400, 421, 428]
 for f in LINE_SLAMS:
     place(slam(), f / FPS, 0.75, rev=0.25)
 for f in [72, 141, 211, 261, 291, 324, 379, 421]:
     place(whoosh(), f / FPS - 0.12, 0.5, pan=0.4)
-for f in (0, 157, 236, 301):
+for f in (0, 190, 236, 301):
     place(blip(), f / FPS, 0.55, rev=0.5)
+    place(flash_hum(), f / FPS, 0.35)
 place(wrong(), 267 / FPS, 0.5)
 place(slam(), 273 / FPS, 0.7)
 

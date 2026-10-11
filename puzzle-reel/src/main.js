@@ -13,7 +13,13 @@ const BEAT = 60 / 128 * FPS; // 14.0625 frames per beat (128 BPM, 32 beats = 15 
 const DISPLAY = 'Unbounded', MONO = 'JetBrains Mono';
 
 // the four hidden frames (in puzzle frames, i.e. global frame - INTRO): frame -> [slot (1-based), digit]
-export const HIDDEN = { 0: [4, '0'], 157: [3, '1'], 236: [1, '1'], 301: [2, '9'] };
+// each digit now holds for one beat (15 frames = 0.5 s) so a viewer can tap to pause on it
+export const HIDDEN = { 0: [4, '0'], 190: [3, '1'], 236: [1, '1'], 301: [2, '9'] };
+export const HOLD = 15;
+export function hiddenAt(f) {
+  for (const k in HIDDEN) if (f >= +k && f < +k + HOLD) return HIDDEN[k];
+  return null;
+}
 
 const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
 const range = (x, a, b) => clamp((x - a) / (b - a));
@@ -86,7 +92,6 @@ function rect(k, x, y, w, h, { rot = 0, fill = SOLID, erase = false, cx, cy } = 
 // ------------------------------------------------------------------ recurring HUD
 function frameCounter(f, onFlash) {
   const k = onFlash ? 'blue' : 'blue';
-  text(k, `КАДЪР ${String(f + 1).padStart(3, '0')} / ${N}`, 64, 292, 34, { weight: 700, fam: MONO, align: 'left', ls: 0.04 });
   // blinking record dot + label on the right
   if (Math.floor(f / 15) % 2 === 0 || onFlash) withCtx('pink', (g) => { g.fillStyle = SOLID; g.beginPath(); g.arc(780, 292, 12, 0, Math.PI * 2); g.fill(); });
   text('blue', 'ЗАКЛЮЧЕНО', 1016, 292, 34, { weight: 700, fam: MONO, align: 'right', ls: 0.04 });
@@ -253,16 +258,17 @@ function drawFrame(F) {
   clearAll();
   if (F < INTRO) { drawIntro(F); return; }
   const f = Math.min(F - INTRO, MAIN - 1 + (F - INTRO >= MAIN ? 1 : 0)); // puzzle frame (>= MAIN during the hold)
-  if (HIDDEN[f]) { hiddenFrame(F, ...HIDDEN[f]); return; }
+  const hid = hiddenAt(f);
+  if (hid) { hiddenFrame(F, ...hid); return; }
   const B = (n) => Math.round(n * BEAT); // beat -> frame
   frameCounter(F, false);
 
   // A — hook (beats 0-5)
   if (f < 72) {
     block(f, [
-      { s: 'ЗАКЛЮЧЕНИ', at: 1 },
-      { s: 'СТЕ В ТОВА', at: B(1) },
-      { s: 'ВИДЕО.', at: B(2), hl: true },
+      { s: 'ЗАКЛЮЧЕНИ', at: 15 },
+      { s: 'СТЕ В ТОВА', at: 29 },
+      { s: 'ВИДЕО.', at: 43, hl: true },
     ], 900);
   }
   // B — the exit is a code
@@ -277,11 +283,11 @@ function drawFrame(F) {
   else if (f < 211) {
     block(f, [
       { s: 'ВСЯКА ЦИФРА', at: 141 },
-      { s: 'Е ТУК САМО', at: 155 },
-      { s: '1 КАДЪР.', at: 169, hl: true },
+      { s: 'Е ТУК САМО', at: 151 },
+      { s: 'ЗА МИГ.', at: 161, hl: true },
     ], 790);
-    if (f >= 183) {
-      const k = (f - 183) / 5;
+    if (f >= 171) {
+      const k = (f - 171) / 5;
       const sc = k < 1 ? 1.8 - 0.8 * easeOut(k) : 1;
       withCtx('yellow', (g) => { g.translate(540, 1110); g.rotate(-0.07); g.scale(sc, sc); g.fillStyle = SOLID; g.fillRect(-380, -74, 760, 148); });
       text('blue', 'ПАУЗИРАЙ.', 540, 1112, fitSize('ПАУЗИРАЙ.', 680, 96), { rot: -0.07, scale: sc });
@@ -386,7 +392,7 @@ async function boot() {
   window.__frame = async (F) => {
     drawFrame(F);
     const f = F - INTRO;
-    const hidden = f >= 0 && HIDDEN[f];
+    const hidden = f >= 0 && hiddenAt(f);
     // misregistration: constant offset + a small jump on every beat (frozen during the final hold)
     const beat = Math.floor(Math.min(F, INTRO + 440) / BEAT);
     const j = (s) => (hash(beat * 7 + s) - 0.5) * 6;

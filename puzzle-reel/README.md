@@ -6,17 +6,17 @@ Structure: 1.5 s "loading" intro (nothing essential — the first second is ofte
 the 15 s puzzle, then a 3 s+ hold on the final card (call to action, Escape Yourself + USYC logos, partners).
 
 The video is itself an escape room. The exit code is **1 9 1 0**, the day the qualifications start.
-Each digit is on screen for exactly **one frame** (a pink flash that says which position it is),
-so viewers have to pause or screenshot to read it:
+Each digit is on screen for half a second (one beat, 15 frames) as a pink flash that says which
+position it is, so viewers can tap to pause and read it:
 
-| Frame (counter on screen) | Time | Clue |
-|---|---|---|
-| КАДЪР 282 | 9.37 s | ЦИФРА 1 ОТ 4 → **1** |
-| КАДЪР 347 | 11.53 s | ЦИФРА 2 ОТ 4 → **9** |
-| КАДЪР 203 | 6.73 s | ЦИФРА 3 ОТ 4 → **1** |
-| КАДЪР 046 | 1.50 s | ЦИФРА 4 ОТ 4 → **0** (first frame after the intro: "where it started") |
+| Time | Clue |
+|---|---|
+| 9.37 s | ЦИФРА 1 ОТ 4 → **1** |
+| 11.53 s | ЦИФРА 2 ОТ 4 → **9** |
+| 7.83 s | ЦИФРА 3 ОТ 4 → **1** |
+| 1.50 s | ЦИФРА 4 ОТ 4 → **0** (right after the intro: "where it started") |
 
-A short audio blip marks every hidden frame. "4718" (the code from the first promo) appears as a decoy.
+A short audio blip and tone mark every digit. "4718" (the code from the first promo) appears as a decoy.
 
 Posting tips: pick a cover frame that is not a hidden frame; write the caption
 as a challenge, e.g. "Заключени сте. Кодът е в коментарите… ако го намерите." Reveal the answer on 19.10.
