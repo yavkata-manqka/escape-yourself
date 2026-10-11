@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="bg">
+<head>
+<meta charset="utf-8">
+<title>Escape Yourself puzzle reel</title>
+<link rel="stylesheet" href="../assets/fonts/fonts.css">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: #f3efe5; }
+  #out { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; }
+  #logos { position: absolute; left: 0; right: 0; top: 880px; height: 210px; display: flex; align-items: center; justify-content: center; gap: 70px; opacity: 0; }
+  #logos .ey { height: 190px; width: auto; }
+  #logos .usyc { height: 200px; width: auto; }
+</style>
+</head>
+<body>
+<canvas id="out" width="1080" height="1920"></canvas>
+<div id="logos"><img class="ey" src="../assets/logo.png" alt=""><img class="usyc" src="../assets/usyc-logo.png" alt=""></div>
+<script type="module" src="main.js"></script>
+</body>
+</html>
