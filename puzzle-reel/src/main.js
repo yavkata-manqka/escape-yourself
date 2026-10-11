@@ -376,7 +376,7 @@ async function boot() {
   const grid = document.getElementById('partners');
   for (const p of plist) {
     const tile = document.createElement('div');
-    tile.className = 'tile';
+    tile.className = p.dark ? 'tile dark' : 'tile';
     if (p.file) { const im = document.createElement('img'); im.src = `../assets/partners/${p.file}`; im.alt = p.name; tile.appendChild(im); }
     else { tile.classList.add('missing'); tile.textContent = p.name; }
     grid.appendChild(tile);

@@ -1,10 +1,10 @@
 [
-  { "name": "Dabov Specialty Coffee", "file": null },
+  { "name": "Dabov Specialty Coffee", "file": "dabov.svg" },
   { "name": "Уча.се", "file": null },
-  { "name": "Intersport", "file": null },
-  { "name": "Ciela", "file": null },
-  { "name": "Fantasmagoria", "file": null },
-  { "name": "Questworld", "file": null },
+  { "name": "Intersport", "file": "intersport.png" },
+  { "name": "Ciela", "file": "ciela.png", "dark": true },
+  { "name": "Fantasmagoria", "file": "fantasmagoria.png" },
+  { "name": "Questworld", "file": "questworld.png" },
   { "name": "SiteGround", "file": null },
   { "name": "Acarel Medet", "file": null },
   { "name": "GeoTrading", "file": null }
