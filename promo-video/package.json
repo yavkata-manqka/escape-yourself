@@ -1,0 +1,18 @@
+{
+  "name": "escape-yourself-promo",
+  "private": true,
+  "type": "module",
+  "description": "30 s vertical promo video for Escape Yourself (USYC), rendered deterministically with Three.js + GSAP + Playwright",
+  "scripts": {
+    "textures": "python3 -I scripts/gen_textures.py",
+    "frames": "node scripts/frames.mjs build/frames 0 900",
+    "encode": "bash scripts/encode.sh"
+  },
+  "dependencies": {
+    "gsap": "3.12.5",
+    "three": "0.169.0"
+  },
+  "devDependencies": {
+    "playwright": "1.56.1"
+  }
+}

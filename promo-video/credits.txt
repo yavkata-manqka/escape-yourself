@@ -1,0 +1,36 @@
+ESCAPE YOURSELF — PROMO VIDEO: ASSET SOURCES AND CREDITS
+========================================================
+
+Brand assets (supplied by USYC)
+- assets/logo.png ............ Escape Yourself logo (yellow variant from escape-yourself-logo.zip), used unmodified
+- assets/usyc-logo.png ....... Youth Council Bulgaria / USYC logo (supplied image, converted WebP -> PNG, unmodified)
+- reference/*.webp|png ....... the three Instagram posts used as the style reference
+
+Fonts (downloaded from Google Fonts, SIL Open Font License 1.1)
+- Inter — https://fonts.google.com/specimen/Inter (Rasmus Andersson)
+- Playfair Display Italic — https://fonts.google.com/specimen/Playfair+Display (Claus Eggers Sørensen)
+  Local copies with the Cyrillic subsets: assets/fonts/
+
+Map data
+- Natural Earth 1:10m Admin 0 Countries (public domain), https://www.naturalearthdata.com
+  via https://github.com/nvkelso/natural-earth-vector — Bulgaria outline extracted to assets/data/bulgaria_ne10m.geojson
+
+3D textures and models
+- Poly Haven (polyhaven.com) could NOT be used: api.polyhaven.com and dl.polyhaven.org were blocked by the
+  network policy of the render environment. Instead every PBR texture set (albedo / normal / roughness) was
+  generated procedurally by scripts/gen_textures.py (seeded FFT noise, original work, no third-party content):
+  wood floor planks, cream plaster, dark varnished wood, painted steel, brass, paper, book-spine atlas,
+  oil-painting (lighthouse seascape) and rug.
+- All models (bookshelf + books, desk, banker's lamp, gilded painting frame and picture light, Edison pendant,
+  chest, 4-dial combination padlock, key, steel exit door, keypad, alarm beacon, wall clock) were built from
+  Three.js geometry (beveled RoundedBoxGeometry etc.) in src/room.js.
+- Ambient reflections: Three.js RoomEnvironment (procedural, MIT).
+
+Software
+- three.js r169 (MIT) — https://threejs.org
+- GSAP 3.12.5 (GreenSock standard "no charge" license) — https://gsap.com
+- Playwright 1.56 (Apache-2.0) with Chromium/SwiftShader for frame capture
+- numpy / scipy (BSD) for audio synthesis, Pillow for textures, ffmpeg for encoding
+
+Music and sound
+- 100% synthesised in code by scripts/audio.py (120 BPM, seeded RNG). No samples, no copyrighted music.
