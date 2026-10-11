@@ -6,7 +6,7 @@ import { buildFlat, buildMap, flatTimeline, flatProcedural, grainURL, fitTitles 
 import { buildHud, hudUpdate, pauseTimeline, pauseProcedural, slamShake } from './hud.js';
 import { hash1, range, lerp } from './util.js';
 
-const FREEZE_T = 23 + 29 / 30; // last gameplay frame, frozen under the pause menu
+const FREEZE_T = 22 + 29 / 30; // last gameplay frame, frozen under the pause menu
 const $ = (s) => document.querySelector(s);
 
 async function loadFonts() {
@@ -50,7 +50,7 @@ async function main() {
 
     // 3D gameplay
     const canvas = $('#gl');
-    if (t >= 8 && t < 24) {
+    if (t >= 8 && t < 23) {
       const { states, center } = statesForFrame(t);
       if (center.cover) canvas.style.visibility = 'hidden';
       else {
@@ -58,7 +58,7 @@ async function main() {
         s3d.render(states, center);
         last3D = t;
       }
-    } else if (t >= 24) {
+    } else if (t >= 23) {
       if (last3D !== FREEZE_T) {
         const { states, center } = statesForFrame(FREEZE_T);
         s3d.render(states, center);
@@ -73,16 +73,16 @@ async function main() {
     pauseProcedural(t);
 
     // camera shake from slams and impacts
-    const shake = t >= 8 && t < 24 ? slamShake(t) : [0, 0, 0];
+    const shake = t >= 8 && t < 23 ? slamShake(t) : [0, 0, 0];
     $('#shake').style.transform = `translate(${shake[0]}px, ${shake[1]}px) rotate(${shake[2]}deg)`;
 
     // pause: freeze, desaturate, darken, short glitch
     const game = $('#game');
-    if (t >= 24) {
-      const k = range(t, 24.0, 24.15);
+    if (t >= 23) {
+      const k = range(t, 23.0, 23.15);
       game.style.filter = `grayscale(${0.9 * k}) brightness(${lerp(1, 0.5, k)}) contrast(${lerp(1, 1.1, k)})`;
       const g = $('#glitch');
-      if (t < 24.3) {
+      if (t < 23.3) {
         const f = Math.floor(t * 30);
         let html = '';
         for (let i = 0; i < 9; i++) {

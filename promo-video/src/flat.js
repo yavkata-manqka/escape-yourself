@@ -5,7 +5,6 @@ import { CHARACTERS } from './characters.js';
 import { hash1, range, easeInExpo, clamp } from './util.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
-const ARROW = '<svg viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="#ECE7DB" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 export const CURSOR_SVG = `<svg viewBox="0 0 32 38" width="64" height="76"><path d="M3 2 L3 31 L10.5 24.5 L15.5 35.5 L21 33 L16 22.5 L26 22 Z" fill="#161514" stroke="#ECE7DB" stroke-width="2.4" stroke-linejoin="round"/></svg>`;
 
 export function grainURL() {
@@ -32,19 +31,16 @@ export function grainURL() {
   return c.toDataURL('image/png');
 }
 
-function header(counter, total, on) {
-  const dashes = Array.from({ length: total }, (_, i) => `<i class="${i < on ? 'on' : ''}"></i>`).join('');
+function header() {
   return `
     <img class="hdr-logo" src="../assets/logo.png" alt="">
-    <div class="counter">${counter}<span class="of"> / 0${total}</span></div>
-    <div class="dashes">${dashes}</div>
     <div class="rule hdr-rule" style="top:404px"></div>`;
 }
 
 function footer() {
   return `
-    <div class="rule ftr-rule" style="top:1478px"></div>
-    <div class="footer"><span class="usyc">USYC</span><span class="round-btn">${ARROW}</span></div>`;
+    <div class="rule ftr-rule" style="top:1468px"></div>
+    <div class="footer"><img class="usyc-logo" src="../assets/usyc-logo.png" alt=""></div>`;
 }
 
 export function buildFlat(root, grain) {
@@ -63,7 +59,7 @@ export function buildFlat(root, grain) {
 
   <section class="screen" id="chars">
     <div class="grain" style="background-image:url(${grain})"></div>
-    ${header('01', 3, 1)}
+    ${header()}
     <div class="title big-title" id="chars-title" style="top:446px">ИЗБЕРИ ГЕРОЙ</div>
     <div class="serif sub" id="chars-sub" style="top:610px">Отбор от <span class="hl">четирима</span>.</div>
     <div class="chars">${CHARACTERS.map((c, i) => `<div class="char" id="ch-${c.id}" data-i="${i}"><svg viewBox="0 0 248 400">${c.svg}</svg></div>`).join('')}</div>
@@ -83,7 +79,7 @@ export function buildFlat(root, grain) {
 
   <section class="screen" id="city">
     <div class="grain" style="background-image:url(${grain})"></div>
-    ${header('02', 3, 2)}
+    ${header()}
     <div class="title big-title" id="city-title" style="top:446px">ИЗБЕРИ ГРАД</div>
     <div id="map-wrap"><div id="map-zoom"><svg id="map-svg" viewBox="0 0 952 600"></svg></div></div>
     <div class="card" id="city-card">
@@ -250,7 +246,7 @@ export function flatTimeline(tl, pinXY) {
   // camera zooms into the pin, then cut to black
   tl.set('#map-zoom', { transformOrigin: `${px}px ${py - 50}px` }, 5.0);
   tl.fromTo('#map-zoom', { scale: 1 }, { scale: 14, duration: 0.7, ease: 'power4.in' }, 7.1);
-  tl.to(['#city-title', '#city-card', '#city .footer', '#city .hdr-logo', '#city .counter', '#city .dashes', '#city .rule', '#city-cursor'], { opacity: 0, duration: 0.25, ease: 'power2.in' }, 7.3);
+  tl.to(['#city-title', '#city-card', '#city .footer', '#city .hdr-logo', '#city .rule', '#city-cursor'], { opacity: 0, duration: 0.25, ease: 'power2.in' }, 7.3);
   tl.set('#city', { display: 'none' }, 7.8333);
 }
 

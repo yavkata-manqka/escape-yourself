@@ -1,8 +1,8 @@
 """Synthesise the full 30 s soundtrack at exactly 120 BPM (one beat = 0.5 s).
 
 Everything is generated in code (numpy/scipy) with a fixed random seed:
-menu groove (0-8 s), dark gameplay bed (8-20 s), slow-motion heartbeat (20-24 s),
-silence + menu hum (24-30 s), plus every sound effect synced to the picture.
+menu groove (0-8 s), dark gameplay bed (8-20.5 s), slow motion (20.5-23 s),
+silence + menu hum (23-30 s), plus every sound effect synced to the picture.
 
 Usage: python3 -I scripts/audio.py out.wav
 """
@@ -312,15 +312,13 @@ place("sfx", fade(r, 0.01, 0.02), 7.1)
 
 # ------------------------------------------------------------------ 8-20 s: gameplay
 # 8.0 BRAAM "НИВО 1" + door creak
-HITS = [8.0, 9.5, 11.0, 13.5, 15.5, 16.0, 16.5, 17.0]
+HITS = [8.0, 9.5, 11.0, 13.5, 15.0, 16.0, 17.0, 18.0]
 for i, h in enumerate(HITS):
-    nxt = HITS[i + 1] if i + 1 < len(HITS) else 20.0
+    nxt = HITS[i + 1] if i + 1 < len(HITS) else 20.5
     d = min(1.8, nxt - h + 0.05)
     if h == 13.5:
         d = 1.0
-    if h < 15.0 < h + d:
-        d = 15.0 - h
-    place("hits", braam(d, 55.0 if h != 13.5 else 49.0, 1.0, 1800 if h >= 15.5 else 1400), h)
+    place("hits", braam(d, 55.0 if h != 13.5 else 49.0, 1.0, 1800 if h >= 15.0 else 1400), h)
 
 # door creak 8.0-8.55
 t = tt(0.55)
@@ -332,8 +330,8 @@ place("sfx", creak, 8.0, 0.8, pan=-0.2)
 place("sfx", click(0.9, 2500), 8.5); place("sfx", click(0.5, 3500), 8.53)
 place("sfx", elec_buzz(0.1, 0.15, 3), 8.53)
 
-# dark bed: pulsing sub bass on 8ths + drone (8-20)
-t = tt(12.0)
+# dark bed: pulsing sub bass on 8ths + drone (8-20.5)
+t = tt(12.5)
 sub = sine(55, t) * 0.8 + lp(saw(55, t), 220) * 0.5
 pulse = 0.35 + 0.65 * np.exp(-((t % 0.25) / 0.09))
 drone = lp(saw(55, t) + saw(55.4, t) + 0.6 * saw(82.6, t), 260) * 0.25
@@ -343,27 +341,21 @@ place("music", (sub * pulse * 0.55 + drone) * swell, 8.0, 0.85)
 # ticking clock, speeding up: 8ths -> 16ths -> 32nds
 ts = 8.5
 k = 0
-while ts < 20.0:
-    step = 0.5 if ts < 12.0 else 0.25 if ts < 15.5 else 0.125
-    if not (15.0 <= ts < 15.5):
-        place("music", tick(k % 2 == 0, 0.32 + 0.12 * (ts > 15.5)), ts, 1.0, pan=0.15 if k % 2 else -0.15)
+while ts < 20.5:
+    step = 0.5 if ts < 12.0 else 0.25 if ts < 15.0 else 0.125
+    place("music", tick(k % 2 == 0, 0.32 + 0.12 * (ts >= 15.0)), ts, 1.0, pan=0.15 if k % 2 else -0.15)
     ts += step; k += 1
 
 # heartbeat (quiet at 8 s, faster + louder until 20 s) and breathing
-hb_times = [8.0 + i * 1.0 for i in range(3)] + [11.0 + i * 0.5 for i in range(8)] + [15.5 + i * 0.5 for i in range(9)]
+hb_times = [8.0 + i * 1.0 for i in range(3)] + [11.0 + i * 0.5 for i in range(19)]
 for h in hb_times:
-    if 15.0 <= h < 15.5:
-        continue
-    g = 0.25 + 0.55 * np.clip((h - 8) / 12, 0, 1)
+    g = 0.25 + 0.55 * np.clip((h - 8) / 12.5, 0, 1)
     place("body", heartbeat_thump(g), h)
 br = 8.1
-while br < 20.0:
-    cyc = 1.2 if br < 12 else 0.8 if br < 15.5 else 0.5
-    if not (14.9 <= br < 15.5):
-        place("body", breath(cyc * 0.42, cyc * 0.5, 0.12 + 0.12 * (br > 15.5)), br, 1.0, pan=0.05)
+while br < 20.2:
+    cyc = 1.2 if br < 12 else 0.8 if br < 15.0 else 0.5
+    place("body", breath(cyc * 0.42, cyc * 0.5, 0.12 + 0.12 * (br > 15.0)), br, 1.0, pan=0.05)
     br += cyc
-    if 15.0 <= br < 15.5:
-        br = 15.55
 
 # footsteps on wood (walk in), pendant flicker buzz, whooshes
 for s_ in (9.08, 9.52, 9.95):
@@ -401,58 +393,62 @@ place("sfx", chime([note(91), note(95), note(98), note(103)], 1.0, 0.5), 14.6)
 for i in range(6):
     place("sfx", blip(note(96 + i * 2), note(100 + i * 2), 0.05, 0.12), 14.62 + i * 0.04, pan=(i % 2) * 0.6 - 0.3)
 place("sfx", blip(500, 1300, 0.07, 0.45), 14.93)
-# 15.0-15.5 BLACKOUT: total silence (enforced on the master below)
-# 15.5 alarm siren, beacon sweep
-t = tt(4.5)
+# 15.0 the lights die: a power-down "thunk" and the alarm siren takes over (no silence)
+t = tt(0.3)
+place("sfx", sine(120 * np.exp(-t / 0.08) + 30, t) * env_exp(t, 0.12) * 0.8, 15.0)
+place("sfx", elec_buzz(0.12, 0.25, 15), 14.97)
+t = tt(5.5)
 sir_f = 760 + 220 * np.sin(2 * np.pi * 0.9 * t - np.pi / 2)
 siren = bp(saw(sir_f, t) * 0.5 + square(sir_f * 0.5, t) * 0.3, 300, 3000)
 siren *= (0.6 + 0.4 * np.clip(t / 0.2, 0, 1)) * 0.16
-place("music", fade(siren, 0.005, 0.03), 15.5, pan=0.1)
-# rising riser from 15.5, climbing until the slow motion
-t = tt(4.5)
-k_ = t / 4.5
-riser = sweep_filter(noise(4.5), 300, 7000, "band", q_band=0.5) * 0.35 + saw(110 * (880 / 110) ** k_, t) * 0.08 + saw(110.7 * (880 / 110) ** k_, t) * 0.08
+place("music", fade(siren, 0.005, 0.03), 15.0, pan=0.1)
+# rising riser from 15.0, climbing until the slow motion
+t = tt(5.5)
+k_ = t / 5.5
+riser = sweep_filter(noise(5.5), 300, 7000, "band", q_band=0.5) * 0.35 + saw(110 * (880 / 110) ** k_, t) * 0.08 + saw(110.7 * (880 / 110) ** k_, t) * 0.08
 riser *= (0.15 + 0.85 * k_ ** 2)
-place("music", fade(riser, 0.01, 0.02), 15.5)
+place("music", fade(riser, 0.01, 0.02), 15.0)
 # 16.0 whip + running steps
 place("sfx", whoosh(0.45, 300, 6000, 0.6), 15.98, pan=0.5)
-for i in range(7):
-    place("sfx", footstep(0.65, 1.2), 16.02 + i * 0.155)
+for i in range(10):
+    place("sfx", footstep(0.65 - 0.03 * max(0, i - 6), 1.2), 16.02 + i * 0.155)
 # keypad presses: click + beep
-for kp in (17.56, 18.56, 19.56):
+for kp in (19.06, 19.56, 20.06):
     place("sfx", click(0.8, 2500), kp)
     t = tt(0.12)
     place("sfx", fade(sine(1450, t) * 0.35 + square(1450, t) * 0.05, 0.002, 0.02), kp + 0.01)
     place("hits", kick(0.55), kp)
 
-# ------------------------------------------------------------------ 20-24 s: slow motion
+# ------------------------------------------------------------------ 20.5-23 s: slow motion
+# One continuous gesture, nothing repeats: a pitch-down "time stretch", a low drone that
+# slowly rises, two heartbeats that drift apart, one held breath.
 t = tt(0.9)
 down = whoosh(0.9, 3000, 120, 0.45) + sine(80 * np.exp(-t / 0.4) + 28, t) * env_exp(t, 0.5) * 0.9
-place("hits", down, 20.0)
-t = tt(4.0)
-low = lp(saw(41.2, t) + saw(41.5, t) + sine(55, t) * 1.5, 160) * 0.35
-low *= np.clip(t / 0.4, 0, 1) * (0.8 + 0.2 * np.sin(2 * np.pi * 0.5 * t))
-place("music", fade(low, 0.01, 0.01), 20.0)
-# the "СЕГА ИЛИ НИКОГА." hit, slowed down and deep
-place("hits", braam(3.5, 41.2, 0.55, 600), 20.5)
-for h in (20.0, 21.0, 22.0, 23.0):
-    place("body", heartbeat_thump(0.95), h)
-for b_, (di, do) in zip((20.15, 21.6, 23.0), ((0.6, 0.8), (0.6, 0.75), (0.45, 0.5))):
-    place("body", breath(di, do, 0.2, 0.85), b_)
+place("hits", down, 20.5)
+t = tt(2.5)
+k_ = t / 2.5
+f0 = 41.2 * (1 + 0.06 * k_ ** 2)
+low = sweep_filter(saw(f0, t) + saw(f0 * 1.007, t) + sine(55 * (1 + 0.06 * k_ ** 2), t) * 1.5, 160, 420, "low") * 0.35
+low *= np.clip(t / 0.3, 0, 1) * (0.7 + 0.5 * k_)
+place("music", fade(low, 0.01, 0.01), 20.5)
+place("hits", braam(2.5, 41.2, 0.5, 600), 20.5)
+place("body", heartbeat_thump(0.95), 20.6)
+place("body", heartbeat_thump(0.75), 22.0)
+place("body", breath(1.6, 0.8, 0.2, 0.85), 20.55)
 
-# ------------------------------------------------------------------ 24-30 s: pause
-place("pause", whoosh(0.5, 2500, 300, 0.25), 24.22)
-t = tt(5.7)
+# ------------------------------------------------------------------ 23-30 s: pause
+place("pause", whoosh(0.5, 2500, 300, 0.25), 23.22)
+t = tt(6.7)
 hum = (sine(55, t) * 0.6 + sine(110, t) * 0.25 + lp(saw(55, t), 300) * 0.15) * 0.12
-hum *= np.clip(t / 0.6, 0, 1) * np.clip((5.7 - t) / 1.0, 0, 1) ** 0.5
-place("pause", hum, 24.3)
-place("pause", blip(900, 1400, 0.05, 0.12), 26.0)
+hum *= np.clip(t / 0.6, 0, 1) * np.clip((6.7 - t) / 1.0, 0, 1) ** 0.5
+place("pause", hum, 23.3)
+place("pause", blip(900, 1400, 0.05, 0.12), 25.0)
 
 # ------------------------------------------------------------------ mix
 tax = np.arange(N) / SR
 # near-silence right before the big hits (music + sfx ducked)
 duck = np.ones(N)
-for h in [11.0, 13.5, 15.5, 20.0]:
+for h in [11.0, 13.5, 15.0, 20.5]:
     m = (tax >= h - 0.14) & (tax < h)
     duck[m] = np.minimum(duck[m], 0.12)
 duck = lp(duck, 40)
@@ -468,8 +464,8 @@ send = buses["sfx"] * 0.35 + buses["hits"] * 0.25 + buses["music"] * 0.1
 wet = np.stack([fftconvolve(send[:, c], ir[:, c])[:N] for c in range(2)], axis=1) * 0.5
 
 mix = buses["music"] * 0.75 + buses["sfx"] * 0.9 + buses["hits"] * 1.0 + buses["body"] * 0.9 + wet
-# hard silence windows: blackout and the pause cut
-for a, b in ((15.0, 15.5), (24.0, 30.0)):
+# hard silence at the pause cut
+for a, b in ((23.0, 30.0),):
     m = (tax >= a) & (tax < b)
     mix[m] = 0
     # 4 ms edges so the cut does not click

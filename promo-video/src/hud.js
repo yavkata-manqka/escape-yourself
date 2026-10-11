@@ -1,4 +1,4 @@
-// Gameplay HUD, flash texts (8-24s) and the pause menu (24-30s).
+// Gameplay HUD, flash texts (8-23s) and the pause menu (23-30s).
 // HUD and flash texts are pure functions of time; the pause menu is a GSAP timeline.
 import { CURSOR_SVG } from './flat.js';
 import { hash1, clamp, lerp, range, easeOutCubic, easeOutBack, easeInCubic } from './util.js';
@@ -10,11 +10,12 @@ export const FLASHES = [
   { t0: 9.5, t1: 9.96, html: 'ТЪРСИ.', cls: 'yellow', size: 220, rot: 4, dy: 260 },
   { t0: 11.0, t1: 11.5, html: 'МИСЛИ.', cls: 'full', size: 205, rot: -2 },
   { t0: 13.5, t1: 13.98, html: 'ГРЕШНО.', cls: 'red', size: 190, rot: -4, dy: -260 },
-  { t0: 15.5, t1: 15.98, html: 'ВРЕМЕТО<br>ИЗТИЧА.', cls: 'black', size: 160, rot: 3 },
-  { t0: 16.0, t1: 16.46, html: 'ПОБЪРЗАЙ.', cls: 'yellow', size: 150, rot: -5, dy: 120 },
-  { t0: 16.5, t1: 16.96, html: 'НЕ<br>ПАНИКЬОСВАЙ.', cls: 'black', size: 112, rot: 4, dy: -80 },
-  { t0: 17.0, t1: 17.5, html: '1 ОПИТ.<br>БЕЗ РЕСТАРТ.', cls: 'blackyellow', size: 116, rot: -4, dy: 280 },
-  { t0: 20.5, t1: 24.0, html: 'СЕГА ИЛИ<br>НИКОГА.', cls: 'black', size: 138, rot: -2, slow: true, dy: -330 },
+  // these four hold for a full second each so they can be read calmly
+  { t0: 15.0, t1: 15.96, html: 'ВРЕМЕТО<br>ИЗТИЧА.', cls: 'black', size: 160, rot: 3 },
+  { t0: 16.0, t1: 16.96, html: 'ПОБЪРЗАЙ.', cls: 'yellow', size: 150, rot: -5, dy: 120 },
+  { t0: 17.0, t1: 17.96, html: 'НЕ<br>ПАНИКЬОСВАЙ.', cls: 'black', size: 112, rot: 4, dy: -80 },
+  { t0: 18.0, t1: 18.96, html: '1 ОПИТ.<br>БЕЗ РЕСТАРТ.', cls: 'blackyellow', size: 116, rot: -4, dy: 280 },
+  { t0: 20.5, t1: 23.0, html: 'СЕГА ИЛИ<br>НИКОГА.', cls: 'black', size: 138, rot: -2, slow: true, dy: -330 },
 ];
 
 const KEY_SVG = `<svg viewBox="0 0 100 100"><g transform="rotate(-35 50 50)">
@@ -57,7 +58,7 @@ export function buildHud(hud, flash, pause, grain) {
       </div>
       <div class="prule" style="top:1080px"></div>
       <div class="pfoot">
-        <div class="l"><img class="usyc-img" src="../assets/usyc-logo.png" alt=""><span>USYC</span></div>
+        <div class="l"><img class="usyc-img" src="../assets/usyc-logo.png" alt=""></div>
         <img class="logo-sm" src="../assets/logo.png" alt="">
       </div>
     </div>
@@ -73,10 +74,10 @@ export function buildHud(hud, flash, pause, grain) {
 }
 
 // ------------------------------------------------------------------ timer
-const SEGS = [[8.0, 9.0, 3599], [9.0, 10.0, 3240], [10.0, 10.5, 2622], [10.5, 11.0, 2045], [11.0, 11.5, 1608], [11.5, 12.5, 1177], [12.5, 13.0, 742], [13.0, 14.0, 488], [14.0, 15.5, 194]];
-const FINAL = [[15.5, 10], [16.0, 9], [16.5, 8], [17.0, 7], [17.5, 6], [18.5, 5], [19.5, 4], [20.0, 3]];
+const SEGS = [[8.0, 9.0, 3599], [9.0, 10.0, 3240], [10.0, 10.5, 2622], [10.5, 11.0, 2045], [11.0, 11.5, 1608], [11.5, 12.5, 1177], [12.5, 13.0, 742], [13.0, 14.0, 488], [14.0, 15.0, 194]];
+const FINAL = [[15.0, 10], [16.0, 9], [17.0, 8], [18.0, 7], [19.0, 6], [19.5, 5], [20.0, 4], [20.5, 3]];
 export function timerValue(t) {
-  if (t >= 15.5) { let v = 10; for (const [ts, val] of FINAL) if (t >= ts) v = val; return v; }
+  if (t >= 15.0) { let v = 10; for (const [ts, val] of FINAL) if (t >= ts) v = val; return v; }
   for (const [a, b, s] of SEGS) if (t >= a && t < b) {
     let v = Math.ceil(s - (t - a) - 1e-6);
     if (a === 13.0 && t >= 13.5) v -= 5;
@@ -93,8 +94,8 @@ function lastChange(t) {
 }
 
 export function heartbeat(t) {
-  const period = t < 20 ? 0.5 : 1.0;
-  const ph = ((t - (t < 20 ? 0 : 20)) % period) / period;
+  if (t >= 20.5) return 0.35; // slow motion: steady, no repeating pulse
+  const ph = (t % 0.5) / 0.5;
   return Math.exp(-ph * 9) + (ph > 0.18 ? 0.6 * Math.exp(-(ph - 0.18) * 11) : 0);
 }
 
@@ -107,30 +108,30 @@ function slam(lt) {
 
 // returns the shake (px) the whole picture should get from flash-text slams and impacts
 export function slamShake(t) {
-  const hits = FLASHES.map((f) => f.t0).concat([13.5, 14.4, 12.5]);
+  const hits = FLASHES.filter((f) => !f.slow).map((f) => f.t0).concat([13.5, 14.4, 12.5]);
   let a = 0;
   for (const h of hits) if (t >= h && t < h + 0.25) a = Math.max(a, 26 * Math.exp(-(t - h) * 14));
-  if (t >= 20.5 && t < 20.75) a = Math.max(a, 10 * Math.exp(-(t - 20.5) * 10));
+  
   const f = Math.floor(t * 30);
   return [(hash1(f * 3) - 0.5) * 2 * a, (hash1(f * 7 + 1) - 0.5) * 2 * a, (hash1(f * 11 + 2) - 0.5) * a * 0.06];
 }
 
 export function hudUpdate(t) {
   const hud = $('#hud');
-  const visible = t >= 8.5 && !(t >= 15.0 && t < 15.5);
+  const visible = t >= 8.5;
   hud.style.display = visible ? 'block' : 'none';
   if (visible) {
     // timer
-    const v = timerValue(Math.min(t, 23.99));
+    const v = timerValue(Math.min(t, 22.99));
     const timer = $('#timer');
     timer.querySelector('.digits').textContent = fmt(v);
-    const danger = t >= 15.5;
+    const danger = t >= 15.0;
     timer.classList.toggle('danger', danger);
-    const lc = lastChange(Math.min(t, 23.99));
+    const lc = lastChange(Math.min(t, 22.99));
     const p = t - lc;
     const pulse = p >= 0 && p < 0.2 ? 0.07 * Math.exp(-p * 18) : 0;
     let sx = 0, sy = 0;
-    if (danger && t < 24) { const f = Math.floor(t * 30); const amp = t < 20 ? 5 : 3; sx = (hash1(f * 5) - 0.5) * 2 * amp; sy = (hash1(f * 9) - 0.5) * 2 * amp; }
+    if (danger && t < 23) { const f = Math.floor(t * 30); const amp = t < 20.5 ? 5 : 2; sx = (hash1(f * 5) - 0.5) * 2 * amp; sy = (hash1(f * 9) - 0.5) * 2 * amp; }
     timer.style.transform = `translate(${sx}px, ${sy}px) scale(${1 + pulse + (danger ? 0.04 * heartbeat(t) : 0)})`;
     $('#timer .dot').style.opacity = Math.floor(t * 2) % 2 === 0 ? 1 : 0.35;
     // penalty pop-up
@@ -146,11 +147,11 @@ export function hudUpdate(t) {
     const covered = (t >= 11.0 && t < 11.5) || t < 8.5;
     ch.style.display = covered ? 'none' : 'block';
     const ring = $('#crosshair .ring');
-    if (t >= 20.0 && t < 24.0) {
-      const hb = heartbeat(t);
-      ring.style.opacity = Math.min(1, range(t, 20.0, 20.4)) * (0.6 + 0.4 * hb);
-      ring.style.transform = `scale(${0.85 + 0.25 * hb})`;
-    } else if (t >= 24) { ring.style.opacity = 0.8; ring.style.transform = 'scale(0.9)'; } else ring.style.opacity = 0;
+    if (t >= 20.5 && t < 23.0) {
+      // slow motion: the ring tightens once, steadily, onto the last button
+      ring.style.opacity = Math.min(1, range(t, 20.5, 20.9)) * 0.9;
+      ring.style.transform = `scale(${lerp(1.2, 0.85, range(t, 20.5, 23.0))})`;
+    } else if (t >= 23) { ring.style.opacity = 0.8; ring.style.transform = 'scale(0.9)'; } else ring.style.opacity = 0;
     // interaction prompts near the object
     promptUpdate('#prompt-look', t, 11.56, 12.06, 11.96, 330, 1130);
     promptUpdate('#prompt-unlock', t, 12.6, 13.06, 12.96, 330, 1130);
@@ -237,29 +238,29 @@ function particles(t) {
 // ------------------------------------------------------------------ pause menu
 export function pauseTimeline(tl) {
   tl.set('#pause', { display: 'none' }, 0);
-  tl.set('#pause', { display: 'block' }, 24.0);
-  tl.fromTo('#pause-dim', { opacity: 0 }, { opacity: 1, duration: 0.15 }, 24.0);
-  tl.fromTo('#panel', { y: 1500, rotate: 6 }, { y: 0, rotate: -1.2, duration: 0.42, ease: 'back.out(1.25)' }, 24.25);
-  tl.fromTo('#panel .ptitle', { scale: 1.5, opacity: 0, transformOrigin: '0% 50%' }, { scale: 1, opacity: 1, duration: 0.2, ease: 'back.out(2)' }, 24.5);
-  tl.fromTo('#pause-icon i', { scaleY: 0 }, { scaleY: 1, duration: 0.2, ease: 'back.out(2.4)', stagger: 0.05 }, 24.55);
-  tl.fromTo('#panel .psub', { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: 0.22, ease: 'power3.out' }, 24.6);
-  tl.fromTo('#panel .psub .hl', { '--hl': 0 }, { '--hl': 1, duration: 0.3, ease: 'power3.out' }, 24.7);
-  tl.fromTo('#btn-cont', { opacity: 0, x: -80 }, { opacity: 1, x: 0, duration: 0.25, ease: 'power3.out' }, 24.65);
-  tl.fromTo('#btn-reg', { opacity: 0, x: 80 }, { opacity: 1, x: 0, duration: 0.25, ease: 'back.out(1.6)' }, 24.75);
-  tl.fromTo('#panel .info', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.25, ease: 'power3.out' }, 24.9);
-  tl.fromTo('#panel .reg .hl', { '--hl': 0 }, { '--hl': 1, duration: 0.3, ease: 'power3.out' }, 25.0);
-  tl.fromTo('#panel .pfoot, #panel .prule', { opacity: 0 }, { opacity: 1, duration: 0.25 }, 25.0);
+  tl.set('#pause', { display: 'block' }, 23);
+  tl.fromTo('#pause-dim', { opacity: 0 }, { opacity: 1, duration: 0.15 }, 23);
+  tl.fromTo('#panel', { y: 1500, rotate: 6 }, { y: 0, rotate: -1.2, duration: 0.42, ease: 'back.out(1.25)' }, 23.25);
+  tl.fromTo('#panel .ptitle', { scale: 1.5, opacity: 0, transformOrigin: '0% 50%' }, { scale: 1, opacity: 1, duration: 0.2, ease: 'back.out(2)' }, 23.5);
+  tl.fromTo('#pause-icon i', { scaleY: 0 }, { scaleY: 1, duration: 0.2, ease: 'back.out(2.4)', stagger: 0.05 }, 23.55);
+  tl.fromTo('#panel .psub', { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: 0.22, ease: 'power3.out' }, 23.6);
+  tl.fromTo('#panel .psub .hl', { '--hl': 0 }, { '--hl': 1, duration: 0.3, ease: 'power3.out' }, 23.7);
+  tl.fromTo('#btn-cont', { opacity: 0, x: -80 }, { opacity: 1, x: 0, duration: 0.25, ease: 'power3.out' }, 23.65);
+  tl.fromTo('#btn-reg', { opacity: 0, x: 80 }, { opacity: 1, x: 0, duration: 0.25, ease: 'back.out(1.6)' }, 23.75);
+  tl.fromTo('#panel .info', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.25, ease: 'power3.out' }, 23.9);
+  tl.fromTo('#panel .reg .hl', { '--hl': 0 }, { '--hl': 1, duration: 0.3, ease: 'power3.out' }, 24);
+  tl.fromTo('#panel .pfoot, #panel .prule', { opacity: 0 }, { opacity: 1, duration: 0.25 }, 24);
   // cursor moves onto the yellow button and hovers
-  tl.fromTo('#pause-cursor', { x: 980, y: 1720, opacity: 0 }, { x: 700, y: 1058, opacity: 1, duration: 0.75, ease: 'power3.inOut' }, 25.25);
-  tl.to('#btn-reg', { scale: 1.045, boxShadow: '0 14px 0 #161514, 0 0 0 10px rgba(255,199,44,0.35)', duration: 0.18, ease: 'back.out(2)' }, 26.0);
+  tl.fromTo('#pause-cursor', { x: 980, y: 1720, opacity: 0 }, { x: 700, y: 1058, opacity: 1, duration: 0.75, ease: 'power3.inOut' }, 24.25);
+  tl.to('#btn-reg', { scale: 1.045, boxShadow: '0 14px 0 #161514, 0 0 0 10px rgba(255,199,44,0.35)', duration: 0.18, ease: 'back.out(2)' }, 25);
 }
 
 export function pauseProcedural(t) {
-  if (t < 24) return;
+  if (t < 23) return;
   // the yellow button pulses until 27.75, then everything holds still
   const btn = $('#btn-reg');
-  if (t >= 24.95 && t < 27.75) {
-    const ph = ((t - 24.95) % 0.5) / 0.5;
+  if (t >= 23.95 && t < 26.75) {
+    const ph = ((t - 23.95) % 0.5) / 0.5;
     const glow = Math.exp(-ph * 5);
     btn.style.filter = `brightness(${1 + 0.08 * glow})`;
     btn.querySelector('.arrow').style.transform = `translateX(${8 * glow}px)`;

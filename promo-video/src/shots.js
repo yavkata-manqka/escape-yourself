@@ -17,8 +17,8 @@ const DIAL = (i) => [POS.padlock.x - 0.03 + i * 0.02, POS.padlock.y - 0.022, POS
 
 // Global tension: handheld shake grows as the timer runs out.
 function tension(t) {
-  if (t < 15.5) return lerp(0.25, 0.55, range(t, 8, 15));
-  if (t < 20) return lerp(0.8, 1.0, range(t, 15.5, 20));
+  if (t < 15.0) return lerp(0.25, 0.55, range(t, 8, 15));
+  if (t < 20.5) return lerp(0.8, 1.0, range(t, 15.0, 20.5));
   return 0.35; // slow motion: slow, heavy drift instead of jitter
 }
 
@@ -78,7 +78,7 @@ function dialValues(t) {
 }
 
 function keypadState(t) {
-  const presses = [['4', 17.56], ['7', 18.56], ['1', 19.56]];
+  const presses = [['4', 19.06], ['7', 19.56], ['1', 20.06]];
   const pressed = {};
   let typed = '';
   for (const [k, tp] of presses) {
@@ -88,14 +88,14 @@ function keypadState(t) {
   }
   const slots = (typed + '____').slice(0, 4).split('');
   let disp = slots.join(' ');
-  if (t >= 20) disp = `${typed.split('').join(' ')} ${(Math.floor((t - 20) / 0.5) % 2 === 0) ? '_' : ' '}`;
-  return { display: disp, color: t >= 15.5 ? 'red' : 'yellow', pressed, glow: 2.2 + (t > 20 ? 0.6 * Math.sin((t - 20) * Math.PI) : 0) };
+  if (t >= 20.5) disp = `${typed.split('').join(' ')} ${(Math.floor((t - 20.5) / 0.5) % 2 === 0) ? '_' : ' '}`;
+  return { display: disp, color: t >= 15.0 ? 'red' : 'yellow', pressed, glow: 2.2 + (t > 20.5 ? 0.5 * range(t, 20.5, 23.0) : 0) };
 }
 
 function heartbeat(t) {
   // 120 BPM double-thump locked to the beat until 20s; slow motion: one beat per second
-  const period = t < 20 ? 0.5 : 1.0;
-  const ph = ((t - (t < 20 ? 0 : 20)) % period) / period;
+  if (t >= 20.5) return 0.35; // slow motion: steady, no repeating pulse
+  const ph = (t % 0.5) / 0.5;
   return Math.exp(-ph * 9) + 0.6 * Math.exp(-Math.max(0, ph - 0.18) * 11) * (ph > 0.18 ? 1 : 0);
 }
 
@@ -252,16 +252,15 @@ const SHOTS = [
       S.post.aperture = 2; S.post.focus = 1.0;
     },
   },
-  // 15.0 blackout: total darkness
-  { t0: 15.0, t1: 15.5, f: (t, S) => { S.cover = 'black'; } },
-  // 15.5 the red alarm kicks in
+  // 15.0 the room lights die and the red alarm kicks in (no black frames)
   {
-    t0: 15.5, t1: 16.0, f: (t, S, lt) => {
-      S.cam.pos = add(V(0.25, EYE - 0.05, 0.3), V(0, 0, -0.1 * lt));
-      S.cam.look = vlerp(V(0.35, 2.5, -3.3), V(0.45, 2.1, -3.3), easeOutCubic(lt / 0.5));
+    t0: 15.0, t1: 16.0, f: (t, S, lt) => {
+      const k = easeOutCubic(lt / 1.0);
+      S.cam.pos = add(V(0.25, EYE - 0.05, 0.35), V(0, 0, -0.15 * k));
+      S.cam.look = vlerp(V(0.35, 2.5, -3.3), V(0.5, 1.9, -3.3), k);
       S.cam.fov = 70;
       S.flash.on = 0;
-      const im = impulse(t, 15.5, 0.35);
+      const im = impulse(t, 15.0, 0.35);
       S.cam.shake = [im * 0.03, im * 0.04];
       S.post.ca = 0.02 * Math.exp(-lt * 6);
     },
@@ -281,29 +280,30 @@ const SHOTS = [
   },
   // 16.5 running at the door
   {
-    t0: 16.5, t1: 17.0, f: (t, S, lt) => {
+    t0: 16.5, t1: 17.5, f: (t, S, lt) => {
       const step = Math.sin(lt * Math.PI * 2 * 3.2 + 1);
-      S.cam.pos = add(vlerp(V(0.5, EYE, -1.0), V(0.95, 1.6, -2.15), lt / 0.5), V(0.025 * step, 0.05 * Math.abs(step), 0));
+      const k = easeOutCubic(lt / 1.0);
+      S.cam.pos = add(vlerp(V(0.5, EYE, -1.0), V(1.0, 1.6, -2.3), k), V(0.025 * step * (1 - k), 0.05 * Math.abs(step) * (1 - k), 0));
       S.cam.look = V(1.25, 1.3, -3.5);
-      S.cam.roll = lerp(0.16, -0.12, easeInOutCubic(lt / 0.5));
+      S.cam.roll = lerp(0.16, -0.1, easeInOutCubic(lt / 1.0));
       S.cam.fov = 72;
       S.flash.on = 0.8;
-      S.mb = { n: 4, shutter: 1 / 45 };
+      S.mb = { n: lt < 0.6 ? 4 : 2, shutter: 1 / 45 };
     },
   },
-  // 17.0 at the keypad: "1 ОПИТ. БЕЗ РЕСТАРТ."
+  // 17.5 at the keypad: "1 ОПИТ. БЕЗ РЕСТАРТ." holds here
   {
-    t0: 17.0, t1: 17.5, f: (t, S, lt) => {
-      S.cam.pos = vlerp(V(1.22, 1.56, -2.5), V(1.3, 1.52, -2.68), easeOutCubic(lt / 0.5));
+    t0: 17.5, t1: 19.0, f: (t, S, lt) => {
+      S.cam.pos = vlerp(V(1.18, 1.57, -2.42), V(1.36, 1.5, -2.82), easeInOutCubic(lt / 1.5));
       S.cam.look = add(KP, V(-0.05, 0, 0));
-      S.cam.roll = -0.08;
-      S.cam.fov = 58;
+      S.cam.roll = lerp(-0.1, -0.04, lt / 1.5);
+      S.cam.fov = lerp(60, 54, lt / 1.5);
       S.flash.on = 0.8;
     },
   },
-  // 17.5 / 18.5 / 19.5 keypad presses, each cut tighter
-  ...[[17.5, 18.5, '4', 0, 1, 0.42, 44, 0.06], [18.5, 19.5, '7', 0, 2, 0.31, 40, -0.1], [19.5, 20.0, '1', 0, 0, 0.23, 36, 0.13]].map(
-    ([t0, t1, key, col, row, dist, fov, roll]) => ({
+  // 19.0 / 19.5 / 20.0 keypad presses, each cut tighter
+  ...[[19.0, 19.5, 0, 1, 0.42, 44, 0.06], [19.5, 20.0, 0, 2, 0.31, 40, -0.1], [20.0, 20.5, 0, 0, 0.23, 36, 0.13]].map(
+    ([t0, t1, col, row, dist, fov, roll]) => ({
       t0, t1, f: (t, S, lt) => {
         const kw = keyWorld(col, row);
         const k = easeOutCubic(lt / (t1 - t0));
@@ -318,20 +318,21 @@ const SHOTS = [
       },
     }),
   ),
-  // 20.0 - 24.0 slow-motion climax: the crosshair hovers over the last button ("8")
+  // 20.5 - 23.0 slow-motion climax: one continuous push-in onto the last button ("8")
   {
-    t0: 20.0, t1: 24.0, f: (t, S, lt) => {
+    t0: 20.5, t1: 23.0, f: (t, S, lt) => {
       const kw = keyWorld(1, 2); // "8"
-      const k = easeInOutCubic(lt / 4);
-      const hb = heartbeat(t);
-      S.time = 20 + lt * 0.15; // slow motion for dust and lights
-      S.cam.pos = add(kw, V(lerp(0.05, 0.02, k), lerp(0.035, 0.02, k), lerp(0.22, 0.16, k)));
+      // keeps moving until the freeze: half linear, half eased
+      const k = 0.5 * (lt / 2.5) + 0.5 * easeInOutCubic(lt / 2.5);
+      S.time = 20.5 + lt * 0.15; // slow motion for dust and lights
+      const off = V(lerp(0.09, 0.015, k), lerp(0.06, 0.018, k), lerp(0.36, 0.15, k));
+      S.cam.pos = add(kw, off);
       S.cam.look = kw;
-      S.cam.roll = lerp(0.1, 0.04, k);
-      S.cam.fov = 36 - 1.2 * hb;
+      S.cam.roll = lerp(0.16, 0.03, k);
+      S.cam.fov = lerp(40, 33, k);
       S.flash.on = 0.45; S.flash.aim = kw;
-      S.post.aperture = 1.4; S.post.focus = Math.hypot(lerp(0.05, 0.02, k), lerp(0.035, 0.02, k), lerp(0.22, 0.16, k)); S.post.maxBlur = 26;
-      S.post.exposure = 0.9 + 0.12 * hb;
+      S.post.aperture = 1.4; S.post.focus = Math.hypot(...off); S.post.maxBlur = 26;
+      S.post.exposure = lerp(0.95, 0.85, k);
       S.mb = { n: 1, shutter: 0 };
     },
   },
@@ -347,14 +348,14 @@ export function stateAt(t) {
   if (i < 0) { S.cover = 'black'; return S; }
   const sh = SHOTS[i];
   sh.f(t, S, t - sh.t0);
-  // alarm (after the blackout)
-  if (t >= 15.5) {
-    const slow = t >= 20 ? 20 + (t - 20) * 0.15 : t;
+  // alarm: the room lights die and the red beacon takes over
+  if (t >= 15.0) {
+    const slow = t >= 20.5 ? 20.5 + (t - 20.5) * 0.15 : t;
     S.lights.alarm = 1;
-    S.lights.alarmAngle = (slow - 15.5) * Math.PI * 2 * 0.9;
-    S.lights.alarmPulse = t < 20 ? 0.55 + 0.45 * heartbeat(t) : 0.4 + 0.6 * heartbeat(t);
+    S.lights.alarmAngle = (slow - 15.0) * Math.PI * 2 * 0.9;
+    S.lights.alarmPulse = t < 20.5 ? 0.55 + 0.45 * heartbeat(t) : 0.75;
     S.lights.pendant = 0; S.lights.lamp = 0; S.lights.picture = 0;
-    S.post.redVig = (t < 20 ? 0.18 : 0.22) * heartbeat(t) + 0.06;
+    S.post.redVig = t < 20.5 ? 0.18 * heartbeat(t) + 0.06 : lerp(0.12, 0.2, range(t, 20.5, 23.0));
     S.haze = 0.07;
   }
   S.keypad = keypadState(t);
@@ -362,7 +363,7 @@ export function stateAt(t) {
   if (t >= 15.0) { S.chest.lid = 1.05; S.chest.glow = 0; }
   // handheld sway + tension shake
   const amp = tension(t);
-  const hh = handheld(S.time, amp * 2.2, t >= 20 ? 0.3 : 1);
+  const hh = handheld(S.time, amp * 2.2, t >= 20.5 ? 0.3 : 1);
   S.cam.shake = [(S.cam.shake[0] || 0) + hh[0], (S.cam.shake[1] || 0) + hh[1]];
   S.cam.roll += hh[2];
   return S;

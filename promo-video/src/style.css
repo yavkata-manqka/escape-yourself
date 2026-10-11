@@ -40,8 +40,8 @@ body { font-family: 'Inter', sans-serif; color: var(--ink); -webkit-font-smoothi
 .dashes { position: absolute; right: 64px; top: 338px; display: flex; gap: 12px; }
 .dashes i { display: block; width: 34px; height: 7px; border-radius: 4px; background: var(--grey); }
 .dashes i.on { background: var(--yellow); }
-.footer { position: absolute; left: 64px; right: 64px; top: 1488px; height: 70px; display: flex; align-items: center; justify-content: space-between; }
-.footer .usyc { font-weight: 800; letter-spacing: 0.12em; font-size: 30px; }
+.footer { position: absolute; left: 64px; right: 64px; top: 1474px; height: 92px; display: flex; align-items: center; justify-content: space-between; }
+.footer .usyc-logo { height: 92px; width: auto; display: block; }
 .round-btn { width: 70px; height: 70px; border-radius: 50%; background: var(--ink); display: grid; place-items: center; }
 .round-btn svg { width: 34px; height: 34px; }
 
