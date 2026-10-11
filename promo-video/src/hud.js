@@ -13,7 +13,7 @@ export const FLASHES = [
   // these four hold for a full second each so they can be read calmly
   { t0: 15.0, t1: 15.96, html: 'ВРЕМЕТО<br>ИЗТИЧА.', cls: 'black', size: 160, rot: 3 },
   { t0: 16.0, t1: 16.96, html: 'ПОБЪРЗАЙ.', cls: 'yellow', size: 150, rot: -5, dy: 120 },
-  { t0: 17.0, t1: 17.96, html: 'НЕ<br>ПАНИКЬОСВАЙ.', cls: 'black', size: 112, rot: 4, dy: -80 },
+  { t0: 17.0, t1: 17.96, html: 'НЕ СЕ<br>ПАНИКЬОСВАЙ.', cls: 'black', size: 112, rot: 4, dy: -80 },
   { t0: 18.0, t1: 18.96, html: '1 ОПИТ.<br>БЕЗ РЕСТАРТ.', cls: 'blackyellow', size: 116, rot: -4, dy: 280 },
   { t0: 20.5, t1: 23.0, html: 'СЕГА ИЛИ<br>НИКОГА.', cls: 'black', size: 138, rot: -2, slow: true, dy: -330 },
 ];
