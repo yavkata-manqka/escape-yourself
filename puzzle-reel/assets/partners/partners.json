@@ -1,10 +1,38 @@
 [
-  { "name": "Dabov Specialty Coffee", "file": "dabov.svg" },
-  { "name": "Intersport", "file": "intersport.png" },
-  { "name": "Ciela", "file": "ciela.png" },
-  { "name": "Fantasmagoria", "file": "fantasmagoria.png" },
-  { "name": "Questworld", "file": "questworld.png" },
-  { "name": "SiteGround", "file": "siteground.png" },
-  { "name": "Акарел Медет", "file": "acarel-medet.png" },
-  { "name": "GeoTrading", "file": "geotrading.png" }
+  {
+    "name": "Dabov Specialty Coffee",
+    "file": "dabov.svg"
+  },
+  {
+    "name": "Уча.се",
+    "file": "ucha-se.png"
+  },
+  {
+    "name": "Intersport",
+    "file": "intersport.png"
+  },
+  {
+    "name": "Ciela",
+    "file": "ciela.png"
+  },
+  {
+    "name": "Fantasmagoria",
+    "file": "fantasmagoria.png"
+  },
+  {
+    "name": "Questworld",
+    "file": "questworld.png"
+  },
+  {
+    "name": "SiteGround",
+    "file": "siteground.png"
+  },
+  {
+    "name": "Акарел Медет",
+    "file": "acarel-medet.png"
+  },
+  {
+    "name": "GeoTrading",
+    "file": "geotrading.png"
+  }
 ]
