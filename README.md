@@ -3,4 +3,5 @@ USYC’s Escape Yourself, a national escape room competition. Promo videos, fina
 
 ## Docs
 
-- [Setting up Claude Code on a new machine](docs/claude-code-setup.md)
+- [Setting up Claude Code on a new Mac](docs/claude-code-setup.md)
+- [Setting up Claude Code on Windows](docs/claude-code-setup-windows.md)

@@ -1,6 +1,6 @@
 # Setting up Claude Code on a new machine
 
-These steps recreate the Claude Code setup used for this project on a new Mac.
+These steps recreate the Claude Code setup used for this project on a new Mac. For Windows, see [claude-code-setup-windows.md](claude-code-setup-windows.md).
 
 ## 1. Prerequisites
 
