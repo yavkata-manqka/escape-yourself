@@ -9,8 +9,8 @@
 | 0–2 s | Boot screen (glitch power-on, logo, "НАТИСНИ START") | HTML/CSS + GSAP (`src/flat.js`) |
 | 2–5 s | Character select (4 flat SVG characters, stat card) | `src/characters.js`, `src/flat.js` |
 | 5–8 s | City select (Natural Earth map of Bulgaria, 5 pins, zoom into Пловдив) | `src/flat.js` |
-| 8–24 s | First-person escape-room gameplay, cuts on every 0.5 s beat | Three.js (`src/room.js`, `src/shots.js`, `src/scene3d.js`, `src/post.js`) + HUD (`src/hud.js`) |
-| 24–30 s | Pause menu over the frozen last frame | `src/hud.js` |
+| 8–23 s | First-person escape-room gameplay, cuts on every 0.5 s beat | Three.js (`src/room.js`, `src/shots.js`, `src/scene3d.js`, `src/post.js`) + HUD (`src/hud.js`) |
+| 23–30 s | Pause menu over the frozen last frame | `src/hud.js` |
 
 Everything is deterministic: `window.__frame(t)` in `src/main.js` seeks the paused GSAP
 timeline, sets the 3D scene to the scripted state for time `t` and renders it. Nothing reads
