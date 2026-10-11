@@ -169,6 +169,38 @@ ir /= np.sqrt((ir ** 2).sum(axis=0))
 wet = np.stack([fftconvolve(send[:, c], ir[:, c])[:N] for c in range(2)], axis=1) * 0.35
 mix = bus + wet
 mix = mix[int(LOOP * SR):]
+
+# ------------------------------------------------------------------ intro + outro around the 15 s puzzle
+# 1.5 s intro (loading: rising roller noise + count-in ticks on the beat), then the puzzle,
+# then a 3 s hold on the final card (one chord that rings out and fades, so the loop restarts quietly)
+INTRO, OUTRO = 1.5, 3.0
+full = np.zeros((int((INTRO + LOOP + OUTRO) * SR), 2))
+full[int(INTRO * SR):int(INTRO * SR) + len(mix)] = mix
+t = tt(INTRO)
+roll = np.zeros(len(t))
+n = noise(INTRO)
+for blk in range(30):
+    a, z = blk * len(n) // 30, (blk + 1) * len(n) // 30
+    fc = 400 * (5000 / 400) ** (blk / 30)
+    roll[a:z] = bp(n[a:z], fc * 0.7, fc * 1.3)
+roll *= (t / INTRO) ** 1.5 * 0.25
+full[:len(roll)] += roll[:, None]
+for k_ in range(1, 4):
+    tk = tick() * 0.8
+    i0 = int((INTRO - k_ * BEAT) * SR)
+    full[i0:i0 + len(tk)] += tk[:, None]
+t = tt(OUTRO)
+chord = sum(saw(note(m), t) + saw(note(m) * 1.003, t) for m in [50, 57, 62, 65, 69]) / 10
+chord = lp(chord, 1600) * np.exp(-t / 0.9) * np.clip(t / 0.01, 0, 1)
+sub = sine(note(38), t) * np.exp(-t / 0.6) * 0.6
+tail = (chord + sub) * 0.5
+tail *= np.clip((OUTRO - t) / 0.4, 0, 1)
+i0 = int((INTRO + LOOP) * SR)
+full[i0:i0 + len(tail)] += tail[:, None]
+# fade the last moment of the looped groove into the hold
+fl = int(0.08 * SR)
+full[i0 - fl:i0] *= np.linspace(1, 0.6, fl)[:, None]
+mix = full
 mix = np.tanh(mix / np.max(np.abs(mix)) * 1.5) / np.tanh(1.5)
 mix *= 10 ** (-1 / 20) / np.max(np.abs(mix))
 out = sys.argv[1] if len(sys.argv) > 1 else 'soundtrack.wav'

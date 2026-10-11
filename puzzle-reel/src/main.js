@@ -4,11 +4,15 @@
 // the Reel loops. Everything is a pure function of the frame number.
 import { Riso } from './riso.js';
 
-const W = 1080, H = 1920, FPS = 30, N = 450;
+const W = 1080, H = 1920, FPS = 30;
+// timeline: a safe 1.5 s intro (often missed when a Reel starts), the 15 s puzzle,
+// then a 3 s hold on the final card with all logos
+export const INTRO = 45, MAIN = 450, OUTRO = 90, TOTAL = INTRO + MAIN + OUTRO;
+const N = TOTAL;
 const BEAT = 60 / 128 * FPS; // 14.0625 frames per beat (128 BPM, 32 beats = 15 s)
 const DISPLAY = 'Unbounded', MONO = 'JetBrains Mono';
 
-// the four hidden frames: frame -> [slot (1-based), digit]
+// the four hidden frames (in puzzle frames, i.e. global frame - INTRO): frame -> [slot (1-based), digit]
 export const HIDDEN = { 0: [4, '0'], 157: [3, '1'], 236: [1, '1'], 301: [2, '9'] };
 
 const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
@@ -215,21 +219,43 @@ function keyhole(g, cx, cy, s) {
 }
 
 // ------------------------------------------------------------------ hidden frame
-function hiddenFrame(f, slot, digit) {
+function hiddenFrame(F, slot, digit) {
   rect('pink', 0, 0, W, H);
-  frameCounter(f, true);
+  frameCounter(F, true);
   text('blue', `ЦИФРА ${slot} ОТ 4`, W / 2, 520, 64, { weight: 800, fam: MONO, ls: 0.06 });
   text('yellow', digit, W / 2 + 18, 950 + 18, 760);
   text('blue', digit, W / 2, 950, 760);
-  slotBar(f, 0, { active: slot, digit, onFlash: true });
+  slotBar(0, 0, { active: slot, digit, onFlash: true });
 }
 
 // ------------------------------------------------------------------ frame
-function drawFrame(f) {
+function drawIntro(F) {
+  frameCounter(F, false);
+  // a padlock slams in while the "level" loads; nothing here is needed for the puzzle
+  const k = F / 5;
+  const sc = k < 1 ? 1.5 - 0.5 * easeOut(k) : 1;
+  const wob = F > 8 ? Math.sin(F * 0.9) * 0.06 * Math.exp(-(F - 8) / 14) : 0;
+  withCtx('pink', (g) => { const grd = g.createRadialGradient(540, 900, 0, 540, 900, 420); grd.addColorStop(0, tone(0.7)); grd.addColorStop(1, tone(0.0)); g.fillStyle = grd; g.fillRect(0, 400, W, 1000); });
+  withCtx('blue', (g) => {
+    g.translate(540, 900); g.rotate(wob); g.scale(sc, sc);
+    g.strokeStyle = SOLID; g.lineWidth = 46; g.beginPath(); g.arc(0, -150, 120, Math.PI, 0); g.lineTo(120, -40); g.moveTo(-120, -150); g.lineTo(-120, -40); g.stroke();
+    g.fillStyle = SOLID; g.beginPath(); g.roundRect(-200, -60, 400, 300, 34); g.fill();
+  });
+  withCtx('yellow', (g) => { g.translate(540, 900); g.rotate(wob); g.scale(sc, sc); g.fillStyle = SOLID; g.beginPath(); g.arc(0, 60, 40, 0, Math.PI * 2); g.fill(); g.fillRect(-16, 70, 32, 90); });
+  text('blue', 'ЗАРЕЖДАНЕ', W / 2, 1300, 40, { weight: 800, fam: MONO, ls: 0.3 });
+  const p = range(F, 2, 42);
+  withCtx('blue', (g) => { g.strokeStyle = SOLID; g.lineWidth = 7; g.strokeRect(190, 1352, 700, 44); });
+  rect('yellow', 198, 1360, 684 * p, 28);
+  text('blue', `${Math.round(p * 100)}%`, W / 2, 1450, 40, { weight: 800, fam: MONO });
+}
+
+function drawFrame(F) {
   clearAll();
-  if (HIDDEN[f]) { hiddenFrame(f, ...HIDDEN[f]); return; }
+  if (F < INTRO) { drawIntro(F); return; }
+  const f = Math.min(F - INTRO, MAIN - 1 + (F - INTRO >= MAIN ? 1 : 0)); // puzzle frame (>= MAIN during the hold)
+  if (HIDDEN[f]) { hiddenFrame(F, ...HIDDEN[f]); return; }
   const B = (n) => Math.round(n * BEAT); // beat -> frame
-  frameCounter(f, false);
+  frameCounter(F, false);
 
   // A — hook (beats 0-5)
   if (f < 72) {
@@ -314,17 +340,22 @@ function drawFrame(f) {
       { s: 'ЗАПОЧНА.', at: 400, hl: true },
     ], 840, { maxSize: 170 });
   }
-  // G — call to action + logos (logos are DOM overlay, untouched by the print effect)
+  // G — final card: call to action, our logos, partners (logos are a DOM overlay,
+  // composited untouched on top of the print effect); held until the end
   else {
     block(f, [
       { s: 'ПИШИ КОДА', at: 421 },
       { s: 'В КОМЕНТАРИТЕ.', at: 428, hl: true },
-    ], 640, { maxSize: 150 });
-    text('blue', 'КВАЛИФИКАЦИИ · 5 ГРАДА', W / 2, 1180, 34, { weight: 700, fam: MONO, ls: 0.12 });
+    ], 520, { maxSize: 140 });
+    text('blue', 'КВАЛИФИКАЦИИ · 5 ГРАДА', W / 2, 850, 32, { weight: 700, fam: MONO, ls: 0.12 });
+    if (f >= 432) {
+      text('blue', 'ПАРТНЬОРИ', W / 2, 922, 30, { weight: 800, fam: MONO, ls: 0.3 });
+      rect('blue', 64, 950, 952 * easeOut(range(f, 432, 440)), 4);
+    }
   }
 
-  // the code bar stays from beat 2 of section B onward (not over the montage)
-  if (f >= 100 && !(f >= 211 && f < 324)) slotBar(f, 100);
+  // the code bar stays from beat 2 of section B until the final card (not over the montage)
+  if (f >= 100 && f < 421 && !(f >= 211 && f < 324)) slotBar(f, 100);
 
   for (const at of [72, 141, 211, 261, 291, 324, 379, 421]) wipe(f, at);
 }
@@ -333,22 +364,41 @@ function drawFrame(f) {
 const out = document.getElementById('out');
 const riso = new Riso(out);
 const logos = document.getElementById('logos');
+const partnerTiles = [];
 
 async function boot() {
   const faces = ['900 50px "Unbounded"', '800 50px "Unbounded"', '700 50px "JetBrains Mono"', '800 50px "JetBrains Mono"'];
   await Promise.all(faces.map((x) => document.fonts.load(x, 'АБВЪЬЮЯ 0123')));
   await document.fonts.ready;
   for (const x of faces) if (!document.fonts.check(x, 'Ъ')) throw new Error('font missing ' + x);
+  // partner logos: assets/partners/partners.json lists [{ name, file }] in display order
+  const plist = await (await fetch('../assets/partners/partners.json')).json();
+  const grid = document.getElementById('partners');
+  for (const p of plist) {
+    const tile = document.createElement('div');
+    tile.className = 'tile';
+    if (p.file) { const im = document.createElement('img'); im.src = `../assets/partners/${p.file}`; im.alt = p.name; tile.appendChild(im); }
+    else { tile.classList.add('missing'); tile.textContent = p.name; }
+    grid.appendChild(tile);
+    partnerTiles.push(tile);
+  }
   await Promise.all([...document.images].map((im) => (im.complete ? 0 : new Promise((r) => { im.onload = r; }))));
-  window.__frame = async (f) => {
-    drawFrame(f);
-    // misregistration: constant offset + a small jump on every beat
-    const beat = Math.floor(f / BEAT);
+  window.__frame = async (F) => {
+    drawFrame(F);
+    const f = F - INTRO;
+    const hidden = f >= 0 && HIDDEN[f];
+    // misregistration: constant offset + a small jump on every beat (frozen during the final hold)
+    const beat = Math.floor(Math.min(F, INTRO + 440) / BEAT);
     const j = (s) => (hash(beat * 7 + s) - 0.5) * 6;
     const offsets = { blue: [0, 0], pink: [5 + j(1), -3 + j(2)], yellow: [-4 + j(3), 4 + j(4)] };
-    if (HIDDEN[f]) offsets.pink = [0, 0];
-    riso.draw(layers, offsets, f);
-    logos.style.opacity = f >= 424 && !HIDDEN[f] ? Math.min(1, (f - 424) / 4) : 0;
+    if (hidden) offsets.pink = [0, 0];
+    riso.draw(layers, offsets, Math.min(F, INTRO + 445));
+    logos.style.opacity = f >= 424 ? Math.min(1, (f - 424) / 4) : 0;
+    partnerTiles.forEach((el, i) => {
+      const k = range(f, 434 + i * 2, 440 + i * 2);
+      el.style.opacity = k;
+      el.style.transform = `scale(${0.6 + 0.4 * backOut(k, 1.8)})`;
+    });
     await new Promise((r) => requestAnimationFrame(() => r()));
   };
   window.__ready = true;

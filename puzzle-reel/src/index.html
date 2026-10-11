@@ -8,13 +8,18 @@
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body { width: 1080px; height: 1920px; overflow: hidden; background: #f3efe5; }
   #out { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; }
-  #logos { position: absolute; left: 0; right: 0; top: 880px; height: 210px; display: flex; align-items: center; justify-content: center; gap: 70px; opacity: 0; }
-  #logos .ey { height: 190px; width: auto; }
-  #logos .usyc { height: 200px; width: auto; }
+  #logos { position: absolute; left: 0; right: 0; top: 640px; height: 180px; display: flex; align-items: center; justify-content: center; gap: 70px; opacity: 0; }
+  #logos .ey { height: 160px; width: auto; }
+  #logos .usyc { height: 170px; width: auto; }
+  #partners { position: absolute; left: 64px; right: 64px; top: 978px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  #partners .tile { height: 172px; background: #fff; border-radius: 18px; display: grid; place-items: center; padding: 22px 26px; opacity: 0; box-shadow: 0 6px 0 rgba(43, 64, 255, 0.85); }
+  #partners .tile img { max-width: 100%; max-height: 120px; object-fit: contain; }
+  #partners .tile.missing { font: 700 22px "JetBrains Mono"; color: #c33; text-align: center; border: 3px dashed #c33; }
 </style>
 </head>
 <body>
 <canvas id="out" width="1080" height="1920"></canvas>
+<div id="partners"></div>
 <div id="logos"><img class="ey" src="../assets/logo.png" alt=""><img class="usyc" src="../assets/usyc-logo.png" alt=""></div>
 <script type="module" src="main.js"></script>
 </body>
