@@ -1,0 +1,9 @@
+{
+  "_comment": "Story frames (30 fps). 'holds' = [storyFrame, extraFrames]: the picture holds still at that story frame so the text can be read calmly. 'flash' = how many frames each hidden digit stays on screen.",
+  "intro": 45,
+  "main": 450,
+  "outro": 90,
+  "flash": 6,
+  "hidden": { "0": [4, "0"], "190": [3, "1"], "236": [1, "1"], "301": [2, "9"] },
+  "holds": [[66, 24], [135, 24], [186, 24], [286, 12], [373, 24], [415, 24]]
+}

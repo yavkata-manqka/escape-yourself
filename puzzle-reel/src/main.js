@@ -1,21 +1,34 @@
-// "Видеото е стаята" — a 15 s Reel that is itself an escape-room puzzle.
-// Code = 1 9 1 0 (the day the qualifications start). Each digit is visible for
-// exactly ONE frame; the 4th digit lives in frame 0, so it is only found when
-// the Reel loops. Everything is a pure function of the frame number.
+// "Видеото е стаята" — a Reel that is itself an escape-room puzzle.
+// Code = 1 9 1 0 (the day the qualifications start). Each digit flashes for a
+// fraction of a second; the 4th digit comes right after the intro ("where it
+// started"). Everything is a pure function of the frame number.
 import { Riso } from './riso.js';
 
 const W = 1080, H = 1920, FPS = 30;
-// timeline: a safe 1.5 s intro (often missed when a Reel starts), the 15 s puzzle,
-// then a 3 s hold on the final card with all logos
-export const INTRO = 45, MAIN = 450, OUTRO = 90, TOTAL = INTRO + MAIN + OUTRO;
+const TL = await (await fetch('timeline.json')).json();
+// timeline: a safe intro (often missed when a Reel starts), the puzzle, then a hold on the final card.
+// The puzzle is authored in "story frames"; `holds` insert extra real frames after text blocks.
+export const INTRO = TL.intro, MAIN = TL.main, OUTRO = TL.outro;
+const HOLDS = TL.holds;
+export const MAIN_REAL = MAIN + HOLDS.reduce((a, [, h]) => a + h, 0);
+export const TOTAL = INTRO + MAIN_REAL + OUTRO;
 const N = TOTAL;
-const BEAT = 60 / 128 * FPS; // 14.0625 frames per beat (128 BPM, 32 beats = 15 s)
+const BEAT = 60 / 128 * FPS; // 14.0625 frames per beat (128 BPM)
 const DISPLAY = 'Unbounded', MONO = 'JetBrains Mono';
-
-// the four hidden frames (in puzzle frames, i.e. global frame - INTRO): frame -> [slot (1-based), digit]
-// each digit now holds for one beat (15 frames = 0.5 s) so a viewer can tap to pause on it
-export const HIDDEN = { 0: [4, '0'], 190: [3, '1'], 236: [1, '1'], 301: [2, '9'] };
-export const HOLD = 15;
+// real frame (inside the puzzle) -> story frame
+function storyOf(r) {
+  if (r >= MAIN_REAL) return MAIN + (r - MAIN_REAL);
+  let s = r;
+  for (const [p, h] of HOLDS) {
+    if (s <= p) break;          // before this hold
+    if (s <= p + h) return p;   // inside the hold: picture stays on story frame p
+    s -= h;                     // after it: shift back
+  }
+  return s;
+}
+// the four hidden digits (story frames): frame -> [slot (1-based), digit]
+export const HIDDEN = TL.hidden;
+export const HOLD = TL.flash;
 export function hiddenAt(f) {
   for (const k in HIDDEN) if (f >= +k && f < +k + HOLD) return HIDDEN[k];
   return null;
@@ -257,7 +270,7 @@ function drawIntro(F) {
 function drawFrame(F) {
   clearAll();
   if (F < INTRO) { drawIntro(F); return; }
-  const f = Math.min(F - INTRO, MAIN - 1 + (F - INTRO >= MAIN ? 1 : 0)); // puzzle frame (>= MAIN during the hold)
+  const f = storyOf(F - INTRO); // story frame (>= MAIN during the final hold)
   const hid = hiddenAt(f);
   if (hid) { hiddenFrame(F, ...hid); return; }
   const B = (n) => Math.round(n * BEAT); // beat -> frame
@@ -391,22 +404,23 @@ async function boot() {
   await Promise.all([...document.images].map((im) => (im.complete ? 0 : new Promise((r) => { im.onload = r; }))));
   window.__frame = async (F) => {
     drawFrame(F);
-    const f = F - INTRO;
+    const f = F >= INTRO ? storyOf(F - INTRO) : -1;
     const hidden = f >= 0 && hiddenAt(f);
     // misregistration: constant offset + a small jump on every beat (frozen during the final hold)
-    const beat = Math.floor(Math.min(F, INTRO + 440) / BEAT);
+    const beat = Math.floor(Math.min(F, INTRO + MAIN_REAL - 10) / BEAT);
     const j = (s) => (hash(beat * 7 + s) - 0.5) * 6;
     const offsets = { blue: [0, 0], pink: [5 + j(1), -3 + j(2)], yellow: [-4 + j(3), 4 + j(4)] };
     if (hidden) offsets.pink = [0, 0];
-    riso.draw(layers, offsets, Math.min(F, INTRO + 445));
+    riso.draw(layers, offsets, Math.min(F, INTRO + MAIN_REAL - 5));
     logos.style.opacity = f >= 424 ? Math.min(1, (f - 424) / 4) : 0;
     partnerTiles.forEach((el, i) => {
-      const k = range(f, 434 + i * 2, 440 + i * 2);
+      const k = range(f, 434 + i * 1.5, 440 + i * 1.5);
       el.style.opacity = k;
       el.style.transform = `scale(${0.6 + 0.4 * backOut(k, 1.8)})`;
     });
     await new Promise((r) => requestAnimationFrame(() => r()));
   };
+  window.__total = TOTAL;
   window.__ready = true;
 }
 boot().catch((e) => { window.__error = String(e.stack || e); });

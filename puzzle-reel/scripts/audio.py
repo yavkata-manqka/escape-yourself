@@ -1,20 +1,33 @@
-"""Soundtrack for the puzzle reel: 15 s, 128 BPM (32 beats), loops seamlessly.
+"""Soundtrack for the puzzle reel: 128 BPM, timed from src/timeline.json.
 
 Two identical loops are synthesised back to back and the second one is kept,
 so reverb/decay tails from the end wrap into the start when the Reel loops.
-A short bright blip marks each one-frame hidden digit (fair audio hint).
+A short bright blip marks each hidden digit (fair audio hint). Events are authored in
+story frames and mapped to real time through the text holds in the timeline.
 
 Usage: python3 -I scripts/audio.py out.wav
 """
 import sys
+import json
+import os
 import numpy as np
 from scipy.signal import butter, sosfilt, fftconvolve
 from scipy.io import wavfile
 
 SR = 48000
-LOOP = 15.0
 BEAT = 60 / 128
 FPS = 30
+TL = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'src', 'timeline.json')))
+HOLDS = TL['holds']
+MAIN_REAL = TL['main'] + sum(h for _, h in HOLDS)
+LOOP = MAIN_REAL / FPS
+
+
+def real(sf):
+    """story frame -> seconds of real time inside the puzzle"""
+    return (sf + sum(h for p, h in HOLDS if sf > p)) / FPS
+
+
 N = int(SR * LOOP * 2)
 rng = np.random.default_rng(1910)
 bus = np.zeros((N, 2))
@@ -108,10 +121,11 @@ def blip():  # the hidden-digit cue
     return (sine(2400, t) * 0.6 + sine(3600, t) * 0.3) * env(t, 0.025)
 
 
-def flash_hum():  # a short buzzing tone for as long as a digit is on screen (0.5 s)
-    t = tt(0.5)
+def flash_hum():  # a short buzzing tone for as long as a digit is on screen
+    d = TL['flash'] / FPS
+    t = tt(d)
     s = sine(note(74), t) * 0.5 + saw(note(62), t) * 0.2
-    return lp(s, 2500) * np.clip(t / 0.01, 0, 1) * np.clip((0.5 - t) / 0.03, 0, 1)
+    return lp(s, 2500) * np.clip(t / 0.01, 0, 1) * np.clip((d - t) / 0.02, 0, 1)
 
 
 def wrong():
@@ -120,13 +134,13 @@ def wrong():
     return lp(s, 1800) * env(t, 0.1)
 
 
-# ------------------------------------------------------------------ groove (32 beats)
+# ------------------------------------------------------------------ groove (runs for the whole puzzle)
 CHORDS = [[62, 65, 69, 72], [58, 62, 65, 69], [55, 58, 62, 65], [57, 61, 64, 67]]  # Dm7 Bbmaj7 Gm7 A7
 ROOTS = [38, 34, 31, 33]
-for b in range(32):
+for b in range(int(np.ceil(LOOP / BEAT))):
     t0 = b * BEAT
     bar = b // 4
-    sect_break = 22 <= b < 24  # stop-time before the hint section
+    sect_break = real(306) <= t0 < real(324)  # stop-time before the hint section
     if not sect_break:
         if b % 4 in (0, 2) or (b % 4 == 3 and b % 8 == 7):
             place(kick(), t0, 0.9)
@@ -147,7 +161,7 @@ for b in range(32):
             place(bass(ROOTS[ch] + (12 if (b + e) % 3 == 2 else 0), BEAT * 0.45), t0 + e * BEAT / 2, 0.75)
 
 # montage section build (frames 211-323): rising filtered noise
-d = (323 - 211) / FPS
+d = real(323) - real(211)
 t = tt(d)
 n = noise(d)
 riser = np.zeros_like(n)
@@ -155,19 +169,19 @@ for blk in range(40):
     a, z = blk * len(n) // 40, (blk + 1) * len(n) // 40
     fc = 300 * (6000 / 300) ** (blk / 40)
     riser[a:z] = bp(n[a:z], fc * 0.7, fc * 1.3)
-place(riser * (t / d) ** 2 * 0.35, 211 / FPS, pan=0.1, rev=0.2)
+place(riser * (t / d) ** 2 * 0.35, real(211), pan=0.1, rev=0.2)
 
 # ------------------------------------------------------------------ picture-synced hits
 LINE_SLAMS = [15, 29, 43, 72, 86, 100, 141, 151, 161, 171, 324, 338, 352, 362, 379, 386, 393, 400, 421, 428]
 for f in LINE_SLAMS:
-    place(slam(), f / FPS, 0.75, rev=0.25)
+    place(slam(), real(f), 0.75, rev=0.25)
 for f in [72, 141, 211, 261, 291, 324, 379, 421]:
-    place(whoosh(), f / FPS - 0.12, 0.5, pan=0.4)
-for f in (0, 190, 236, 301):
-    place(blip(), f / FPS, 0.55, rev=0.5)
-    place(flash_hum(), f / FPS, 0.35)
-place(wrong(), 267 / FPS, 0.5)
-place(slam(), 273 / FPS, 0.7)
+    place(whoosh(), real(f) - 0.12, 0.5, pan=0.4)
+for f in TL['hidden']:
+    place(blip(), real(int(f)), 0.55, rev=0.5)
+    place(flash_hum(), real(int(f)), 0.35)
+place(wrong(), real(267), 0.5)
+place(slam(), real(273), 0.7)
 
 # ------------------------------------------------------------------ mix: keep the second loop
 ir_t = tt(1.2)
@@ -177,10 +191,10 @@ wet = np.stack([fftconvolve(send[:, c], ir[:, c])[:N] for c in range(2)], axis=1
 mix = bus + wet
 mix = mix[int(LOOP * SR):]
 
-# ------------------------------------------------------------------ intro + outro around the 15 s puzzle
+# ------------------------------------------------------------------ intro + outro around the puzzle
 # 1.5 s intro (loading: rising roller noise + count-in ticks on the beat), then the puzzle,
 # then a 3 s hold on the final card (one chord that rings out and fades, so the loop restarts quietly)
-INTRO, OUTRO = 1.5, 3.0
+INTRO, OUTRO = TL['intro'] / FPS, TL['outro'] / FPS
 full = np.zeros((int((INTRO + LOOP + OUTRO) * SR), 2))
 full[int(INTRO * SR):int(INTRO * SR) + len(mix)] = mix
 t = tt(INTRO)
