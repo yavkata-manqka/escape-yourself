@@ -67,3 +67,25 @@ body { font-family: 'Manrope', sans-serif; color: var(--cream); -webkit-font-smo
 .tile { width: 222px; height: 112px; background: #fff; border-radius: 14px; display: grid; place-items: center; padding: 12px 16px; opacity: 0; box-shadow: 0 0 0 2px rgba(255, 199, 44, 0.55), 0 10px 30px rgba(0, 0, 0, 0.5); }
 .tile.dark { background: #0b0a09; }
 .tile img { max-width: 100%; max-height: 86px; object-fit: contain; }
+
+/* ---- v2: faster cut ---- */
+.mid { font-size: 68px; }
+#t1 { top: 300px; }
+#stats { top: 1090px; left: 80px; right: 80px; display: grid; grid-template-columns: 1fr 1fr; row-gap: 40px; justify-items: center; }
+#stats .stat { width: 420px; }
+#stats .num { font-size: 150px; }
+#sure { top: 300px; }
+#sure .label { font-weight: 800; font-size: 44px; letter-spacing: 0.32em; color: var(--cream); padding-left: 0.32em; }
+#contested { top: 380px; }
+#contested .mid { margin-top: 18px; }
+
+#race { position: absolute; inset: 0; opacity: 0; background: linear-gradient(180deg, rgba(3,3,4,0.9) 0%, rgba(3,3,4,0.78) 50%, rgba(3,3,4,0.9) 100%); }
+#lanes { position: absolute; left: 90px; width: 900px; top: 760px; height: 552px; }
+.lane { position: absolute; left: 0; right: 0; height: 92px; }
+.lane .track { position: absolute; left: 0; right: 0; top: 45px; height: 2px; background: rgba(243, 235, 221, 0.14); }
+.lane .trail { position: absolute; left: 0; top: 34px; height: 24px; border-radius: 12px; background: linear-gradient(90deg, rgba(255,199,44,0) 0%, rgba(255,199,44,0.35) 55%, #ffd45a 100%); box-shadow: 0 0 24px rgba(255, 180, 30, 0.45); }
+.lane .head { position: absolute; top: 28px; width: 36px; height: 36px; margin-left: -18px; border-radius: 50%; background: #fff7dc; box-shadow: 0 0 22px 8px rgba(255, 199, 44, 0.85), 0 0 60px 20px rgba(255, 160, 20, 0.35); }
+#finish { position: absolute; left: 820px; top: -30px; bottom: -30px; width: 6px; background: repeating-linear-gradient(180deg, #FFC72C 0 18px, transparent 18px 32px); opacity: 0.85; }
+#hairline { position: absolute; left: 820px; width: 4px; background: #fff7dc; box-shadow: 0 0 18px 6px rgba(255, 199, 44, 0.9); opacity: 0; }
+#r-seconds, #r-clear, #r-much { top: 330px; }
+#r-hair { top: 1330px; }

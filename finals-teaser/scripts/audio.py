@@ -15,9 +15,10 @@ from scipy.signal import butter, sosfilt, fftconvolve
 from scipy.io import wavfile
 
 SR = 48000
-DUR = 32.0
-N = int(SR * DUR)
 BEAT = 0.6
+_src = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'src', 'timeline.js'), encoding='utf-8').read()
+DUR = float(re.search(r'DURATION = ([\d.]+)', _src).group(1))
+N = int(SR * DUR)
 rng = np.random.default_rng(711)
 music = np.zeros((N, 2))
 sfx = np.zeros((N, 2))
@@ -126,65 +127,67 @@ def crash(d=3.0, gain=0.5):
     return hp(noise(d), 4500) * env(t, 0.9) * gain
 
 
-# ------------------------------------------------------------------ score
-# 0-3: drone + shimmer under the title
-t = tt(8.0)
-drone = lp(saw(note(26), t) + saw(note(26) * 1.005, t) + 0.6 * sine(note(38), t), 220) * 0.25
-drone *= np.clip(t / 1.5, 0, 1) * np.clip((8.0 - t) / 0.8, 0, 1)
+# ------------------------------------------------------------------ score (fast cut, follows the voice)
+# 1. scale: driving low drums from the first frame, a hit + ping on every counter
+t = tt(T['rise'] + 0.6)
+drone = lp(saw(note(26), t) + saw(note(26) * 1.005, t) + 0.6 * sine(note(38), t), 240) * 0.25
+drone *= np.clip(t / 0.3, 0, 1) * np.clip((len(t) / SR - t) / 0.5, 0, 1)
 place(music, drone, 0.0)
-place(sfx, whoosh(1.2, 0.35)[::-1], 0.0)          # reverse swell into the title
-place(sfx, ping(93, 0.25), T['title1'], rev=0.6)
-place(sfx, ping(100, 0.15), T['title1'] + 0.05, pan=0.4, rev=0.6)
+place(sfx, whoosh(0.5, 0.35)[::-1], 0.0)
+for b in range(int(T['rise'] / (BEAT / 2))):
+    place(music, taiko(0.6 if b % 2 == 0 else 0.3, 1.0 if b % 2 == 0 else 1.5), b * BEAT / 2)
+for i, k in enumerate(('stat1', 'stat2', 'stat3', 'stat4')):
+    place(music, braam(0.7, 40 + i * 2, 2200, 0.55), T[k], rev=0.3)
+    place(sfx, ping((76, 79, 81, 84)[i], 0.25), T[k], pan=-0.4 + i * 0.27, rev=0.5)
+    for q in range(6):
+        place(sfx, tick(0.15), T[k] + q * 0.07)
+for i in range(5):
+    place(sfx, ping(88 + i * 2, 0.12), T['stat3'] + i * 0.08, pan=-0.6 + i * 0.3, rev=0.5)
 
-# 3-7.8: pulse of low drums, a ping per city (one per beat), counter ticks
-for b in range(int((T['rise'] - T['teams']) / BEAT)):
-    t0 = T['teams'] + b * BEAT
-    place(music, taiko(0.55 if b % 2 == 0 else 0.35), t0)
-for i, m in enumerate((69, 72, 76, 79, 81)):
-    place(sfx, ping(m, 0.28), T['teams'] + i * BEAT, pan=-0.5 + i * 0.25, rev=0.5)
-for i in range(3):
-    t0 = T[f'counter{i + 1}']
-    for k in range(10):
-        place(sfx, tick(0.18), t0 + k * 0.11, pan=-0.3 + i * 0.3)
-place(music, pad([50, 57, 62, 65], 4.8, 0.18, 900), 3.0)
+# 2. "на косъм": a ticking race, rising tension per race, a hit on each verdict
+for b in range(int((T['cutText'] - T['race1']) / (BEAT / 4))):
+    place(sfx, tick(0.16 if b % 4 == 0 else 0.08), T['race1'] + b * BEAT / 4, pan=0.2 if b % 2 else -0.2)
+for b in range(int((T['cutText'] - T['race1']) / BEAT)):
+    place(music, taiko(0.45, 1.0), T['race1'] + b * BEAT)
+place(sfx, riser(T['race2'] - T['race1'] - 0.3, 300, 3000, 0.3), T['race1'])
+place(sfx, riser(T['much'] - T['race2'] - 0.3, 300, 4000, 0.3), T['race2'])
+place(music, braam(1.0, 36, 1800, 0.8), T['race1'] + 1.78, rev=0.3)   # photo finish
+place(music, braam(1.0, 34, 1800, 0.8), T['race2'] + 1.0, rev=0.3)    # clear win
+place(music, braam(0.8, 38, 2000, 0.85), T['much'], rev=0.3)
+place(music, braam(1.0, 33, 2400, 1.0), T['hair'], rev=0.4)
+place(music, pad([50, 57, 62, 65], T['cutText'] - T['race1'], 0.16, 1000), T['race1'])
 
-# 7.8-9.6: everything rises into the wall
-place(sfx, riser(1.8, 200, 4000, 0.45), T['rise'])
-# 9.6-12.0: each wave of teams going dark is a BRAAM; survivors shimmer at 12.0
+# 3. the cut: a BRAAM on every wave of teams going dark
 for i, w in enumerate(WAVES[:4]):
-    place(music, braam(BEAT * 1.0 + 0.05, 36 - i, 1300 + i * 200, 0.9), w, rev=0.3)
+    place(music, braam(0.4, 36 - i, 1300 + i * 200, 0.85), w, rev=0.3)
 place(sfx, ping(88, 0.3), WAVES[4], rev=0.7); place(sfx, ping(95, 0.25), WAVES[4] + 0.08, pan=0.4, rev=0.7)
-place(music, pad([50, 57, 62, 69], 1.6, 0.14, 700), 12.0)
 
-# 13.2-17.4: a column per beat; taiko groove builds; choir-like pad climbs
+# 4. line-up + "оспорван до последната секунда": columns on 16ths, build to the final
 for i in range(8):
     tc = T['lineup'] + i * T['columnStep']
-    place(music, taiko(0.8, 0.9), tc)
-    place(sfx, braam(0.55, 48, 2500, 0.35), tc, pan=-0.6 + i * 0.17, rev=0.3)
-for b in range(int((T['finalHit'] - 0.3 - T['lineup']) / (BEAT / 2))):
-    t0 = T['lineup'] + b * BEAT / 2
-    if b % 2 == 1:
-        place(music, taiko(0.3, 1.6), t0)
-place(music, pad([50, 57, 62, 65, 69], 3.0, 0.22, 1200), T['lineup'])
-place(music, pad([46, 53, 58, 62, 65], 3.2, 0.26, 1800), T['lineup'] + 3.0)
-# 17.4-19.8: build to the final, silence on the last beat before the hit
-place(sfx, riser(T['finalHit'] - 0.25 - 17.4, 150, 9000, 0.6), 17.4)
+    place(music, taiko(0.75, 0.9), tc)
+    place(sfx, braam(0.4, 48, 2500, 0.3), tc, pan=-0.6 + i * 0.17, rev=0.3)
+for b in range(int((T['finalHit'] - 0.25 - T['lineup']) / (BEAT / 2))):
+    place(music, taiko(0.35 + 0.02 * b, 1.4), T['lineup'] + b * BEAT / 2)
+place(music, pad([50, 57, 62, 65, 69], T['finalHit'] - T['lineup'], 0.24, 1400), T['lineup'])
+place(sfx, riser(T['finalHit'] - 0.2 - (T['flythrough'] - 1.4), 150, 9000, 0.6), T['flythrough'] - 1.4)
 
-# 19.8: the final - massive hit, crash, epic chord with drums
-place(music, braam(3.6, 33, 2600, 1.35), T['finalHit'], rev=0.4)
-place(sfx, crash(3.2, 0.45), T['finalHit'], rev=0.3)
-place(music, pad([45, 52, 57, 61, 64, 69], T['cta'] - T['finalHit'] + 0.8, 0.3, 2400), T['finalHit'] + 0.1, rev=0.3)
-for b in range(int((T['cta'] - T['finalHit']) / BEAT)):
-    place(music, taiko(0.7 if b % 2 == 0 else 0.45), T['finalHit'] + BEAT + b * BEAT)
+# 5. the final: massive hit, crash, epic chord with drums
+place(music, braam(2.6, 33, 2600, 1.35), T['finalHit'], rev=0.4)
+place(sfx, crash(2.6, 0.45), T['finalHit'], rev=0.3)
+place(music, pad([45, 52, 57, 61, 64, 69], T['cta'] - T['finalHit'] + 0.6, 0.3, 2400), T['finalHit'] + 0.1, rev=0.3)
+for b in range(int((T['cta'] - T['finalHit']) / (BEAT / 2))):
+    place(music, taiko(0.6 if b % 2 == 0 else 0.35), T['finalHit'] + BEAT / 2 + b * BEAT / 2)
 
-# 23.4: the email notification; music steps back to a pulse
-place(sfx, notify(0.55), T['cta'] + 0.15, rev=0.2)
-for b in range(int((T['endCard'] - T['cta']) / BEAT)):
-    place(music, taiko(0.35, 0.8), T['cta'] + b * BEAT)
-place(music, pad([50, 57, 62, 65], T['endCard'] - T['cta'] + 0.5, 0.16, 800), T['cta'])
+# 6. the email notification; music keeps a pulse
+place(sfx, notify(0.55), T['cta'] + 0.1, rev=0.2)
+for b in range(int((T['endCard'] - T['cta']) / (BEAT / 2))):
+    place(music, taiko(0.4 if b % 2 == 0 else 0.22, 0.85), T['cta'] + b * BEAT / 2)
+place(music, pad([50, 57, 62, 65], T['endCard'] - T['cta'] + 0.4, 0.16, 900), T['cta'])
+place(music, braam(0.6, 40, 2000, 0.5), T['ctaFollow'], rev=0.3)
 
-# 28.2: end card - last chord rings out to the end
-place(music, braam(3.8, 38, 1200, 0.6), T['endCard'], rev=0.4)
+# 7. end card: last chord rings out to the end
+place(music, braam(3.0, 38, 1200, 0.6), T['endCard'], rev=0.4)
 place(music, pad([50, 57, 62, 66, 69], DUR - T['endCard'], 0.24, 1600), T['endCard'], rev=0.4)
 place(sfx, whoosh(0.6, 0.3), T['endCard'] - 0.3)
 

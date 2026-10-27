@@ -272,20 +272,19 @@ export class Scene3D {
   cameraAt(t) {
     // [time, pos, look, fov]
     const keys = [
-      [0.0, [0.2, 11.6, 10.6], [0, 0, 0.9], 46],
-      [3.0, [0.0, 10.6, 9.6], [0, 0, 0.8], 46],
-      [7.8, [-0.2, 9.8, 8.8], [0, 0.2, 0.7], 46],
-      [9.4, [0.0, 3.4, 9.6], [0, 3.75, -0.4], 50],
-      [13.0, [0.0, 3.4, 8.9], [0, 3.75, -0.4], 50],
+      [0.0, [0.2, 11.2, 10.2], [0, 0, 0.9], 46],
+      [T.rise, [-0.1, 10.0, 9.0], [0, 0.1, 0.8], 46],
+      [T.rise + 1.8, [0.0, 3.4, 9.6], [0, 3.75, -0.4], 50],
+      [T.lineup - 0.2, [0.0, 3.4, 8.9], [0, 3.75, -0.4], 50],
     ];
-    if (t < 13.2) {
+    if (t < T.lineup) {
       let i = 0; while (i < keys.length - 2 && t >= keys[i + 1][0]) i++;
       const [t0, p0, l0, f0] = keys[i], [t1, p1, l1, f1] = keys[i + 1];
       const k = easeInOut(range(t, t0, t1));
       return { pos: v3lerp(p0, p1, k), look: v3lerp(l0, l1, k), fov: lerp(f0, f1, k) };
     }
     if (t < T.flythrough) { // slow orbit around the line-up
-      const k = range(t, 13.2, T.flythrough);
+      const k = range(t, T.lineup, T.flythrough);
       const a = lerp(-0.22, 0.18, easeInOut(k));
       const R = lerp(7.6, 6.6, k);
       return { pos: new THREE.Vector3(Math.sin(a) * R, lerp(1.9, 1.5, k), -0.6 + Math.cos(a) * R), look: new THREE.Vector3(0, 1.7, -0.9), fov: 52 };
@@ -295,7 +294,7 @@ export class Scene3D {
       return { pos: v3lerp([0, 1.5, 6.0], [0, 1.7, -2.6], k), look: new THREE.Vector3(0, 1.8, -9), fov: lerp(52, 74, k) };
     }
     // after the hit: wide hero shot of the line-up, slow push
-    const k = range(t, T.finalHit, 28.2);
+    const k = range(t, T.finalHit, T.endCard);
     return { pos: v3lerp([0, 2.6, 7.6], [0, 2.3, 6.4], easeOut(k)), look: new THREE.Vector3(0, 2.2, -1.0), fov: 54 };
   }
 
@@ -306,9 +305,9 @@ export class Scene3D {
     cam.position.copy(c.pos); cam.fov = c.fov; cam.updateProjectionMatrix(); cam.lookAt(c.look);
 
     // map: visible until the line-up, outline pulse travels around the border
-    const mapA = 1 - range(t, 12.0, 13.2);
+    const mapA = 1 - range(t, T.rise + 0.4, T.rise + 1.6);
     this.mapGroup.visible = mapA > 0.001;
-    this.mapGroup.position.y = -1.5 * easeIn(range(t, 12.0, 13.2));
+    this.mapGroup.position.y = -1.5 * easeIn(range(t, T.rise + 0.4, T.rise + 1.6));
     if (this.mapMesh) {
       this.mapMesh.material.opacity = mapA;
       const ob = easeOut(range(t, 0.2, 2.2));
@@ -327,12 +326,12 @@ export class Scene3D {
     const m = new THREE.Matrix4(), col = new THREE.Color();
     this.teams.forEach((tm, i) => {
       // appear per city, one city per beat
-      const tApp = T.teams + tm.ci * 0.6 + tm.j * 0.035;
+      const tApp = T.teams + tm.ci * 0.25 + tm.j * 0.02;
       const app = backOut(range(t, tApp, tApp + 0.3), 2.4);
       let p = new THREE.Vector3(...tm.map);
       let r = 0.05 * app, bright = 1.35 * clamp(app);
       // rise into the wall
-      const riseT = T.rise + (i % 13) * 0.04;
+      const riseT = T.rise + (i % 13) * 0.03;
       const kr = easeInOut(range(t, riseT, riseT + 1.4));
       if (kr > 0) { p = v3lerp(tm.map, tm.wall, kr); r = lerp(0.05, 0.1, kr); }
       // waves: non-survivors flicker and go dark
@@ -349,7 +348,7 @@ export class Scene3D {
         bright *= 1 + 1.5 * Math.exp(-(t - T.waves[4]) * 3);
         const s = tm.survivor;
         const tf = T.lineup + s * T.columnStep;
-        const kf = easeInOut(range(t, tf - 0.9, tf));
+        const kf = easeInOut(range(t, tf - 0.5, tf));
         if (kf > 0) {
           const target = [this.columns[s].pos[0], 1.7, this.columns[s].pos[2]];
           p = v3lerp(tm.wall, target, kf);
@@ -366,7 +365,7 @@ export class Scene3D {
     this.teamMesh.instanceColor.needsUpdate = true;
 
     // arena + columns
-    const arenaA = range(t, 12.4, 13.4);
+    const arenaA = range(t, T.lineup - 0.5, T.lineup + 0.4);
     this.arena.visible = arenaA > 0;
     this.floor.material.emissiveIntensity = 0.06 * arenaA + (t >= T.finalHit ? 0.08 * Math.exp(-(t - T.finalHit) * 1.5) : 0);
     this.columns.forEach((c, i) => {
@@ -389,7 +388,7 @@ export class Scene3D {
 
     // dust
     this.dust.material.uniforms.t.value = t;
-    this.dust.material.uniforms.amt.value = 0.45 + (t >= T.finalHit ? 1.2 * Math.exp(-(t - T.finalHit) * 0.8) : 0) + 0.3 * range(t, 13, 14);
+    this.dust.material.uniforms.amt.value = 0.45 + (t >= T.finalHit ? 1.2 * Math.exp(-(t - T.finalHit) * 0.8) : 0) + 0.3 * range(t, T.lineup, T.lineup + 1);
 
     this.bloom.strength = 0.6 + (t >= T.finalHit ? 0.5 * Math.exp(-(t - T.finalHit) * 2) : 0);
     this.grade.uniforms.seed.value = Math.floor(t * 30);
