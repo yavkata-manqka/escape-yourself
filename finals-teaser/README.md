@@ -1,20 +1,17 @@
 # Escape Yourself — finals teaser ("8-те")
 
-`escape-yourself-finals.mp4`: 1080×1920, 30 fps, H.264 + AAC, 32 s, Bulgarian voice-over.
-
-The qualifications are over: 50+ teams, 5 cities, 1 week — only 8 go on to the final
-(7.11, София). No team names are shown; the call to action is "Следи имейла си" because the
-finalists are told by email by 29.10.
+`escape-yourself-finals.mp4`: 1080×1920, 30 fps, H.264 + AAC, 25.6 s, Bulgarian voice-over
+(`assets/voice/recording2.m4a`; every scene starts on its spoken phrase).
 
 | Time | Scene |
 |---|---|
-| 0–3 s | Dark-glass 3D map of Bulgaria with a gold pulse — "КВАЛИФИКАЦИИТЕ ПРИКЛЮЧИХА." |
-| 3–7.8 s | Team lights appear in the 5 cities; counters 50+ ОТБОРА · 5 ГРАДА · 1 СЕДМИЦА |
-| 7.8–13 s | The teams rise into a wall of light and go dark in waves (52 → 38 → 24 → 14 → 8) — "САМО 8 ПРОДЪЛЖАВАТ." |
-| 13–18.6 s | 8 gold light columns with locked "?" emblems in a line-up — "НАЙ-СИЛНИТЕ 8." |
-| 18.6–23.4 s | Fly-through and hit — "ФИНАЛ · 7.11 · СОФИЯ" |
-| 23.4–28.2 s | Email notification — "Финалистите — до 29.10", "СЛЕДИ ИМЕЙЛА СИ.", "и папката за спам" |
-| 28.2–32 s | End card: Escape Yourself + USYC, 12 partners (white tiles), 5 escape partners (dark tiles) |
+| 0–4.6 s | Map of Bulgaria lights up; counters slam in: 50+ ОТБОРА · 200+ ИГРАЧИ · 5 ГРАДА · 1 СЕДМИЦА |
+| 4.6–10.9 s | "На косъм": anonymous light lanes race — СЕКУНДИ. / УБЕДИТЕЛНО. / МНОГО ЗА МАЛКО. / НА КОСЪМ. (symbolic, no real results) |
+| 10.9–12.9 s | Wall of 52 team lights goes dark in waves → "САМО 8 ПРОДЪЛЖАВАТ." |
+| 12.9–16.5 s | 8 gold columns with "?" emblems — "ЕДНО Е СИГУРНО · ОСПОРВАН ДО ПОСЛЕДНАТА СЕКУНДА." |
+| 16.5–18.1 s | Hit — "ФИНАЛ · 7.11 · СОФИЯ" |
+| 18.1–21.4 s | Email notification — "Финалистите — до 29.10", "СЛЕДИ ИМЕЙЛА СИ.", "и папката за спам" |
+| 21.4–25.6 s | End card: Escape Yourself + USYC, 12 partners, 5 escape partners |
 
 The 8 survivors are picked at random from the wall after the teams have left the map, so the
 video does not hint at which cities the finalists come from.
@@ -33,11 +30,11 @@ video does not hint at which cities the finalists come from.
 
 ```bash
 npm install
-node scripts/frames.mjs build/frames 0 960
-ffmpeg -i assets/voice/recording.m4a -ac 1 -ar 48000 build/vo_raw.wav
-python3 -I scripts/audio.py build/soundtrack.wav build/vo_raw.wav
+node scripts/frames.mjs build/frames 0 768
+ffmpeg -i assets/voice/recording2.m4a -ac 1 -ar 48000 build/vo2_raw.wav
+python3 -I scripts/audio.py build/soundtrack.wav build/vo2_raw.wav
 ffmpeg -framerate 30 -i build/frames/f%05d.jpg -i build/soundtrack.wav -map 0:v -map 1:a \
-  -c:v libx264 -preset slow -crf 20 -pix_fmt yuv420p -c:a aac -b:a 256k -t 32 -movflags +faststart escape-yourself-finals.mp4
+  -c:v libx264 -preset slow -crf 20 -pix_fmt yuv420p -c:a aac -b:a 256k -t 25.6 -movflags +faststart escape-yourself-finals.mp4
 ```
 
 Fonts: Oswald, Manrope (Google Fonts, OFL). Map: Natural Earth (public domain). Music and effects are
