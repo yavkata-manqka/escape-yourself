@@ -1,0 +1,14 @@
+[
+  { "name": "Уча.се", "file": "../assets/partners/ucha-se.png" },
+  { "name": "Intersport", "file": "../assets/partners/intersport.png" },
+  { "name": "Ciela", "file": "../assets/partners/ciela.png" },
+  { "name": "Fantasmagoria", "file": "../assets/partners/fantasmagoria.png" },
+  { "name": "Questworld", "file": "../assets/partners/questworld.png" },
+  { "name": "SiteGround", "file": "../assets/partners/siteground.png" },
+  { "name": "Акарел Медет", "file": "../assets/partners/acarel-medet.png" },
+  { "name": "GeoTrading", "file": "../assets/partners/geotrading.png" },
+  { "name": "Biotrade", "file": "../assets/partners/biotrade.png" },
+  { "name": "Baldis", "file": "../assets/partners/baldis.png" },
+  { "name": "Makaroon", "file": "../assets/partners/makaroon.png" },
+  { "name": "Balkan Climbing Team", "file": "../assets/partners/balkan-climbing.png" }
+]
