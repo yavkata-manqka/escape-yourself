@@ -131,7 +131,7 @@ async function partners() {
     return list.length;
   };
   const n1 = await fill('partners', '../assets/partners/partners.json', 'tile');
-  const n2 = await fill('escape-partners', '../assets/escape-partners/partners.json', 'tile dark');
+  const n2 = await fill('escape-partners', '../assets/escape-partners/partners.json', 'tile');
   $('#pl1').style.top = '640px';
   $('#partners').style.top = '690px';
   return n2;

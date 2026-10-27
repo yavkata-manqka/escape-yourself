@@ -1,7 +1,7 @@
 [
-  { "name": "Question Rooms", "file": "../assets/escape-partners/question-rooms.png" },
-  { "name": "3KEY Rooms", "file": "../assets/escape-partners/3key-rooms.png" },
-  { "name": "Houdini Escape Rooms", "file": "../assets/escape-partners/houdini.png" },
-  { "name": "Escape Project Изолация", "file": "../assets/escape-partners/izolatsiya.png" },
-  { "name": "Logiscape", "file": "../assets/escape-partners/logiscape.png" }
+  { "name": "Question Rooms", "file": "../assets/escape-partners/light/question-rooms.png" },
+  { "name": "3KEY Rooms", "file": "../assets/escape-partners/light/3key-rooms.png" },
+  { "name": "Houdini Escape Rooms", "file": "../assets/escape-partners/light/houdini.png" },
+  { "name": "Escape Project Изолация", "file": "../assets/escape-partners/light/izolatsiya.png" },
+  { "name": "Logiscape", "file": "../assets/escape-partners/light/logiscape.png" }
 ]
