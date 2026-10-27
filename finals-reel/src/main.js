@@ -134,10 +134,7 @@ async function partners() {
   const n2 = await fill('escape-partners', '../assets/escape-partners/partners.json', 'tile dark');
   $('#pl1').style.top = '640px';
   $('#partners').style.top = '690px';
-  const y2 = 690 + Math.ceil(n1 / 4) * 126 + 36;
-  $('#pl2').style.top = `${y2}px`;
-  $('#escape-partners').style.top = `${y2 + 50}px`;
-  if (!n2) $('#pl2').style.display = 'none';
+  return n2;
 }
 
 // ------------------------------------------------------------------ main
@@ -149,7 +146,8 @@ async function main() {
   const V = await (await fetch('voice.json')).json();
   const S = V.sentences;
   const END = S[9].end + 0.35;
-  const TOTAL = END + 4.0;
+  const END2 = END + 2.8;
+  const TOTAL = END2 + 3.2;
 
   $('#grain').style.backgroundImage = `url(${grainURL()})`;
   buildReel($('#n50'), '50+');
@@ -175,10 +173,9 @@ async function main() {
   buildEnvelope();
   await partners();
   await Promise.all([...document.images].map((im) => (im.complete ? 0 : new Promise((r) => { im.onload = r; im.onerror = r; }))));
-  const tiles = [...document.querySelectorAll('.tile')];
 
-  const scenes = ['#s0', '#s1', '#s2', '#s3', '#s4', '#s5', '#s6', '#s7', '#s8', '#s9', '#end'].map((s) => $(s));
-  const cut = (i) => (i === 0 ? 0 : i === 10 ? END : S[i].at - 0.12);
+  const scenes = ['#s0', '#s1', '#s2', '#s3', '#s4', '#s5', '#s6', '#s7', '#s8', '#s9', '#end', '#end2'].map((s) => $(s));
+  const cut = (i) => (i === 0 ? 0 : i === 10 ? END : i === 11 ? END2 : S[i].at - 0.12);
   // punches: every cut and the key slams get a short camera shake
   const punches = [];
   for (let i = 1; i <= 10; i++) punches.push([cut(i), 16]);
@@ -193,7 +190,7 @@ async function main() {
     // camera: punch-in on every cut, slow push, shake on punches
     let sh = 0; for (const [p, a] of punches) if (t >= p && t < p + 0.35) sh = Math.max(sh, a * Math.exp(-(t - p) * 11));
     const fr = Math.floor(t * FPS);
-    const zoom = cur === 10 ? 1 : 1.07 - 0.07 * easeOut(range(lt, 0, 0.25)) + 0.02 * range(lt, 0.25, 3);
+    const zoom = cur >= 10 ? 1 : 1.07 - 0.07 * easeOut(range(lt, 0, 0.25)) + 0.02 * range(lt, 0.25, 3);
     $('#cam').style.transform = `translate(${(hash(fr) - 0.5) * 2 * sh}px, ${(hash(fr + 3) - 0.5) * 2 * sh}px) scale(${zoom}) rotate(${(hash(fr + 9) - 0.5) * sh * 0.04}deg)`;
     const gfr = Math.floor(fr / 4); // grain changes every 4th frame, like film
     $('#grain').style.backgroundPosition = `${Math.floor(hash(gfr) * 540)}px ${Math.floor(hash(gfr + 1) * 540)}px`;
@@ -314,9 +311,16 @@ async function main() {
     }
     // end card
     if (cur === 10) {
-      tiles.forEach((el, i) => pop(el, t, END + 0.15 + i * 0.04, { dur: 0.3, from: 0.6 }));
+      $('#partners').querySelectorAll('.tile').forEach((el, i) => pop(el, t, END + 0.15 + i * 0.04, { dur: 0.3, from: 0.6 }));
       slam($('#end .logos'), t, END, { from: 1.15 });
       slam($('#end .final-label'), t, END + 0.1, { from: 1.2 });
+    }
+    // end card 2 · escape partners of the qualifications
+    if (cur === 11) {
+      slam($('#end2 .logos'), t, END2, { from: 1.15 });
+      slam($('#e2a'), t, END2 + 0.05, { from: 1.4 });
+      slam($('#e2b'), t, END2 + 0.3, { from: 1.2 }); highlight($('#e2b'), t, END2 + 0.45);
+      $('#escape-partners').querySelectorAll('.tile').forEach((el, i) => pop(el, t, END2 + 0.55 + i * 0.08, { dur: 0.3, from: 0.6 }));
     }
     await new Promise((r) => requestAnimationFrame(() => r()));
   };

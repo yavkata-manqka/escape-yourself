@@ -108,3 +108,17 @@ body { font-family: 'Inter', sans-serif; color: var(--k); -webkit-font-smoothing
 #s1 .reel { font-size: 230px; }
 #tokens, #tokens2, #people { z-index: 0; }
 #only8 { font-size: 250px; }
+
+/* end card 1: partners only, larger tiles */
+#partners .tile { width: 290px; height: 148px; }
+#partners .tile img { max-height: 112px; }
+/* end card 2: escape partners of the qualifications */
+#end2 .logos { position: absolute; left: 0; right: 0; top: 270px; display: flex; justify-content: center; }
+#end2 .logos .ey { height: 130px; width: auto; }
+#e2a, #e2b { position: absolute; left: 0; right: 0; text-align: center; }
+#e2a { top: 450px; font-size: 118px; }
+#e2b { top: 680px; font-size: 92px; }
+#end2 .grid { position: absolute; left: 60px; right: 60px; top: 870px; display: flex; flex-wrap: wrap; justify-content: center; gap: 24px; }
+#end2 .tile { width: 440px; height: 200px; border-radius: 22px; padding: 20px 28px; box-shadow: 0 10px 0 var(--k); }
+#end2 .tile img { max-height: 160px; }
+#end2 .tile img { width: 100%; height: 160px; }
